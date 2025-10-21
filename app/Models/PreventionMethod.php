@@ -5,18 +5,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class PreventionMethod extends Model
+class Prevention extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'disease_id',
-        'method_type',
-        'title',
+        'prevention_method',
         'description',
-        'steps',
-        'effectiveness',
-        'cost_estimate'
+        'effectiveness_level'
     ];
 
     public function disease()

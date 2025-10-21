@@ -24,7 +24,7 @@ class DiseaseMedicine extends Model
 
     public function disease()
     {
-        return $this->belongsTo(Disease::class);
+        return $this->belongsTo(Diseases::class);
     }
 
     public function medicine()

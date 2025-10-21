@@ -53,7 +53,7 @@
                         </div>
                     </div>
                     <div class="card-content">1,248</div>
-                    <a href="{{ route('ai-chat.index') }}" class="card-footer">
+                    <a href="{{ route('chat.index') }}" class="card-footer">
                         Lihat detail <i class="fas fa-arrow-right"></i>
                     </a>
                 </div>

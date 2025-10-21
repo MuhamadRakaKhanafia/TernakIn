@@ -50,6 +50,6 @@ class ProvinceSeeder extends Seeder
             ['name' => 'Papua Barat Daya', 'code' => '96'],
         ];
 
-        DB::table('provinces')->insert($provinces);
+        DB::table('province')->insert($provinces);
     }
 }

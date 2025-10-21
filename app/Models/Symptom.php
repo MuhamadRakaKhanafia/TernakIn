@@ -10,21 +10,14 @@ class Symptom extends Model
     use HasFactory;
 
     protected $fillable = [
-        'symptom_code',
-        'name',
+        'disease_id',
+        'symptom_name',
         'description',
-        'severity_level',
-        'is_common'
+        'severity_level'
     ];
 
-    protected $casts = [
-        'is_common' => 'boolean'
-    ];
-
-    public function diseases()
+    public function disease()
     {
-        return $this->belongsToMany(Diseases::class, 'disease_symptoms')
-                    ->withPivot('probability', 'is_primary', 'notes')
-                    ->withTimestamps();
+        return $this->belongsTo(Disease::class);
     }
 }

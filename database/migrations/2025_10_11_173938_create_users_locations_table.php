@@ -9,8 +9,8 @@ return new class extends Migration {
         if (!Schema::hasTable('user_locations')) {
             Schema::create('user_locations', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('province_id')->constrained('provinces')->onDelete('cascade');
-            $table->foreignId('city_id')->constrained('cities')->onDelete('cascade');
+            $table->foreignId('province_id')->constrained('province')->onDelete('cascade');
+            $table->foreignId('city_id')->constrained('city')->onDelete('cascade');
             $table->string('district')->nullable();
             $table->string('village')->nullable();
             $table->text('detailed_address')->nullable();

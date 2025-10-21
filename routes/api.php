@@ -36,19 +36,21 @@ Route::get('/provinces', [ProvinceController::class, 'index']);
 Route::get('/provinces/{id}', [ProvinceController::class, 'show']);
 Route::get('/provinces/{provinceId}/cities', [ProvinceController::class, 'getCities']);
 
+// Animal Types (moved outside sanctum middleware for AJAX calls from web pages)
+Route::middleware('auth:web')->group(function () {
+    Route::get('/animal-types', [AnimalTypeController::class, 'index']);
+    Route::get('/animal-types/{id}', [AnimalTypeController::class, 'show']);
+    Route::post('/animal-types', [AnimalTypeController::class, 'store']);
+    Route::put('/animal-types/{id}', [AnimalTypeController::class, 'update']);
+    Route::delete('/animal-types/{id}', [AnimalTypeController::class, 'destroy']);
+});
+
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
     // Auth routes
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/profile', [AuthController::class, 'profile']);
     Route::put('/profile', [AuthController::class, 'updateProfile']);
-
-    // Animal Types
-    Route::get('/animal-types', [AnimalTypeController::class, 'index']);
-    Route::get('/animal-types/{id}', [AnimalTypeController::class, 'show']);
-    Route::post('/animal-types', [AnimalTypeController::class, 'store']);
-    Route::put('/animal-types/{id}', [AnimalTypeController::class, 'update']);
-    Route::delete('/animal-types/{id}', [AnimalTypeController::class, 'destroy']);
 
     // Diseases
     Route::get('/diseases', [DiseaseController::class, 'index']);
@@ -74,14 +76,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/articles/{slug}', [ArticleController::class, 'show']);
     Route::get('/articles/popular', [ArticleController::class, 'popularArticles']);
     Route::get('/articles/recent', [ArticleController::class, 'recentArticles']);
-
-    // AI Chat Routes
-    Route::prefix('ai-chat')->group(function () {
-        Route::post('/sessions/start', [AiChatController::class, 'startNewSession']);
-        Route::post('/sessions/{sessionId}/message', [AiChatController::class, 'sendMessage']);
-        Route::get('/sessions/{sessionId}', [AiChatController::class, 'getSessionHistory']);
-        Route::get('/sessions', [AiChatController::class, 'getUserSessions']);
-        Route::delete('/sessions/{sessionId}', [AiChatController::class, 'deleteSession']);
-        Route::get('/usage-stats', [AiChatController::class, 'getAiUsageStats']);
-    });
 });
+
+

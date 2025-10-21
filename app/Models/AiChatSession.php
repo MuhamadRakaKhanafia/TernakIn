@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class AiChatSession extends Model
 {
@@ -14,18 +15,19 @@ class AiChatSession extends Model
         'user_id',
         'animal_type_id',
         'title',
-        'message_count',
-        'token_count',
-        'last_activity',
-        'is_active'
+        'last_activity'
     ];
 
-    protected $casts = [
-        'last_activity' => 'datetime',
-        'is_active' => 'boolean',
-        'message_count' => 'integer',
-        'token_count' => 'integer'
-    ];
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($model) {
+            if (empty($model->session_id)) {
+                $model->session_id = Str::uuid();
+            }
+        });
+    }
 
     public function user()
     {
@@ -42,21 +44,8 @@ class AiChatSession extends Model
         return $this->hasMany(AiChatMessage::class, 'session_id');
     }
 
-    // Helper method to get the last user message
-    public function getLastUserMessage()
+    public function usageAnalytics()
     {
-        return $this->messages()
-            ->where('role', 'user')
-            ->orderBy('created_at', 'desc')
-            ->first();
-    }
-
-    // Helper method to get conversation history
-    public function getConversationHistory($limit = 10)
-    {
-        return $this->messages()
-            ->orderBy('created_at', 'asc')
-            ->limit($limit)
-            ->get();
+        return $this->hasMany(AiUsageAnalytic::class);
     }
 }

@@ -276,29 +276,22 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
 
     try {
         const formData = new FormData(this);
+
         const response = await fetch('/login', {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                 'Accept': 'application/json',
-                'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                email: formData.get('email'),
-                password: formData.get('password')
-            })
+            credentials: 'same-origin',
+            body: formData
         });
 
         const data = await response.json();
 
         if (data.success) {
-            // Store token if needed
-            if (data.access_token) {
-                localStorage.setItem('auth_token', data.access_token);
-            }
-
             // Redirect to dashboard
-            window.location.href = '{{ route("dashboard") }}';
+            window.location.href = data.redirect_url || '{{ route("dashboard") }}';
         } else {
             // Show errors
             if (data.errors) {

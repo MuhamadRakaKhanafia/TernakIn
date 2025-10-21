@@ -10,26 +10,15 @@ class Medicine extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name',
-        'type',
-        'description',
-        'dosage_guideline',
+        'disease_id',
+        'medicine_name',
+        'dosage',
         'administration_method',
-        'side_effects',
-        'price_range',
-        'is_prescription_required',
-        'is_active'
+        'side_effects'
     ];
 
-    protected $casts = [
-        'is_prescription_required' => 'boolean',
-        'is_active' => 'boolean'
-    ];
-
-    public function diseases()
+    public function disease()
     {
-        return $this->belongsToMany(Disease::class, 'disease_medicines')
-                    ->withPivot('recommended_dosage', 'administration_notes', 'effectiveness', 'is_preventive')
-                    ->withTimestamps();
+        return $this->belongsTo(Disease::class);
     }
 }

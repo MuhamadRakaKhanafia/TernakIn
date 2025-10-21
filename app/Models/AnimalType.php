@@ -23,7 +23,7 @@ class AnimalType extends Model
 
     public function diseases()
     {
-        return $this->belongsToMany(Disease::class, 'disease_animal_types')
+        return $this->belongsToMany(Diseases::class, 'disease_animal_types')
                     ->withPivot('severity', 'specific_notes')
                     ->withTimestamps();
     }

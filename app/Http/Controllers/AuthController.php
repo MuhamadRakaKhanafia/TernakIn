@@ -9,136 +9,193 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
-use App\Http\Requests\RegisterRequest;
 
 class AuthController extends Controller
 {
-   public function register(Request $request)
-{
-    $validator = Validator::make($request->all(), [
-        'name' => 'required|string|max:100',
-        'email' => 'required|email|max:100|unique:users',
-        'password' => 'required|string|min:8|confirmed',
-        'phone' => 'required|string|max:20',
-        'province_id' => 'required|exists:provinces,id',
-        'city_id' => 'required|exists:cities,id',
-        'district' => 'nullable|string|max:100',
-        'village' => 'nullable|string|max:100',
-        'detailed_address' => 'nullable|string',
-    ]);
-
-    if ($validator->fails()) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Validasi gagal',
-            'errors' => $validator->errors()
-        ], 422);
+    public function showRegistrationForm()
+    {
+        $provinces = DB::table('province')->orderBy('name')->get();
+        return view('auth.register', compact('provinces'));
     }
 
-    $validated = $validator->validated();
-
-    DB::beginTransaction();
-    try {
-        // Create user location
-        $location = UserLocation::create([
-            'province_id' => $validated['province_id'],
-            'city_id' => $validated['city_id'],
-            'district' => $validated['district'] ?? null,
-            'village' => $validated['village'] ?? null,
-            'detailed_address' => $validated['detailed_address'] ?? null,
-        ]);
-
-        // Create user
-        $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'phone' => $validated['phone'],
-            'user_type' => 'peternak',
-            'location_id' => $location->id,
-            'is_active' => true,
-        ]);
-
-        DB::commit();
-
-        // Load relations dengan benar
-        $user->load(['location.province', 'location.city']);
-
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Registrasi berhasil',
-            'user' => $user,
-            'access_token' => $token,
-            'token_type' => 'Bearer'
-        ], 201);
-
-    } catch (\Exception $e) {
-        DB::rollBack();
-        \Log::error('Registration error: ' . $e->getMessage());
+    public function getCities($province_id)
+    {
+        $cities = DB::table('city')
+                   ->where('province_id', $province_id)
+                   ->orderBy('name')
+                   ->get();
         
-        return response()->json([
-            'success' => false,
-            'message' => 'Registrasi gagal',
-            'error' => 'Terjadi kesalahan server. Silakan coba lagi.'
-        ], 500);
+        return response()->json($cities);
     }
-}
+
+    public function register(Request $request)
+    {
+        // Handle both AJAX and normal form submission
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:100',
+            'email' => 'required|email|max:100|unique:users',
+            'password' => 'required|string|min:8|confirmed',
+            'phone' => 'required|string|max:20',
+            'province_id' => 'required|exists:province,id',
+            'city_id' => 'required|exists:city,id',
+            'district' => 'nullable|string|max:100',
+            'village' => 'nullable|string|max:100',
+            'detailed_address' => 'nullable|string',
+        ]);
+
+        if ($validator->fails()) {
+            // Jika request AJAX
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validasi gagal',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+            
+            // Jika form submission biasa
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        DB::beginTransaction();
+        try {
+            // Create user location
+            $location = UserLocation::create([
+                'province_id' => $request->province_id,
+                'city_id' => $request->city_id,
+                'district' => $request->district,
+                'village' => $request->village,
+                'detailed_address' => $request->detailed_address,
+            ]);
+
+            // Create user
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'phone' => $request->phone,
+                'user_type' => 'peternak',
+                'location_id' => $location->id,
+                'is_active' => true,
+            ]);
+
+            DB::commit();
+
+            // Login user automatically
+            Auth::login($user);
+
+            // Response berdasarkan tipe request
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Registrasi berhasil!',
+                    'redirect_url' => route('dashboard')
+                ], 201);
+            }
+
+            // Redirect untuk form submission biasa
+            return redirect()->route('dashboard')
+                ->with('success', 'Registrasi berhasil! Selamat datang.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            // Jika request AJAX
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Registrasi gagal',
+                    'error' => 'Terjadi kesalahan server. Silakan coba lagi.'
+                ], 500);
+            }
+            
+            // Jika form submission biasa
+            return redirect()->back()
+                ->with('error', 'Terjadi kesalahan server. Silakan coba lagi.')
+                ->withInput();
+        }
+    }
+
     public function login(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
-            'password' => 'required|string'
+            'password' => 'required'
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+            
+            return back()->withErrors($validator)->withInput();
         }
 
-        if (!Auth::attempt($request->only('email', 'password'))) {
+        $credentials = $request->only('email', 'password');
+
+        if (Auth::attempt($credentials)) {
+            $request->session()->regenerate();
+            
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Login berhasil!',
+                    'redirect_url' => route('dashboard')
+                ]);
+            }
+            
+            return redirect()->route('dashboard')
+                ->with('success', 'Login berhasil! Selamat datang kembali.');
+        }
+
+        // Jika request AJAX
+        if ($request->expectsJson()) {
             return response()->json([
                 'success' => false,
-                'error' => 'Email atau password salah'
+                'error' => 'Email atau password salah.'
             ], 401);
         }
-
-        $user = User::where('email', $request->email)->firstOrFail();
-        $user->update(['last_login' => now()]);
-
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Login berhasil',
-            'user' => $user->load('location'),
-            'access_token' => $token,
-            'token_type' => 'Bearer'
-        ]);
+        
+        // Jika form submission biasa
+        return back()->withErrors([
+            'email' => 'Email atau password salah.',
+        ])->onlyInput('email');
     }
 
     public function logout(Request $request)
     {
-        $token = $request->user()->currentAccessToken();
-        if ($token) {
-            $token->delete();
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Logout berhasil'
+            ]);
         }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Logout berhasil'
-        ]);
+        return redirect()->route('login')
+            ->with('success', 'Logout berhasil');
     }
 
     public function profile(Request $request)
     {
-        return response()->json([
-            'success' => true,
-            'user' => $request->user()->load(['location.province', 'location.city'])
-        ]);
+        $user = $request->user()->load(['location.province', 'location.city']);
+        
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'user' => $user
+            ]);
+        }
+
+        return view('auth.profile', compact('user'));
     }
 
     public function updateProfile(Request $request)
@@ -148,18 +205,24 @@ class AuthController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'sometimes|string|max:100',
             'phone' => 'sometimes|string|max:20',
-            'province_id' => 'sometimes|exists:provinces,id',
-            'city_id' => 'sometimes|exists:cities,id',
+            'province_id' => 'sometimes|exists:province,id',
+            'city_id' => 'sometimes|exists:city,id',
             'district' => 'nullable|string|max:100',
             'village' => 'nullable|string|max:100',
             'detailed_address' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+            
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
         }
 
         DB::beginTransaction();
@@ -180,18 +243,29 @@ class AuthController extends Controller
 
             DB::commit();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Profil berhasil diperbarui',
-                'user' => $user->load(['location.province', 'location.city'])
-            ]);
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Profil berhasil diperbarui',
+                    'user' => $user->load(['location.province', 'location.city'])
+                ]);
+            }
+
+            return redirect()->back()
+                ->with('success', 'Profil berhasil diperbarui');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json([
-                'success' => false,
-                'error' => 'Gagal memperbarui profil: ' . $e->getMessage()
-            ], 500);
+            
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Gagal memperbarui profil: ' . $e->getMessage()
+                ], 500);
+            }
+            
+            return redirect()->back()
+                ->with('error', 'Gagal memperbarui profil: ' . $e->getMessage());
         }
     }
 }

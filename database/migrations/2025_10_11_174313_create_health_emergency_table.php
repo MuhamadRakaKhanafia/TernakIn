@@ -14,7 +14,7 @@ return new class extends Migration {
             $table->string('phone', 20)->nullable();
             $table->string('email', 100)->nullable();
             $table->text('address')->nullable();
-            $table->foreignId('location_id')->nullable()->constrained('cities')->onDelete('set null');
+            $table->foreignId('location_id')->nullable()->constrained('city')->onDelete('set null');
             $table->boolean('is_verified')->default(false);
             $table->integer('years_of_experience')->nullable();
             $table->timestamps();
@@ -27,9 +27,8 @@ return new class extends Migration {
             $table->string('phone', 20)->nullable();
             $table->string('email', 100)->nullable();
             $table->string('website', 200)->nullable();
-            $table->text('address')->nullable();
-            $table->foreignId('province_id')->nullable()->constrained()->onDelete('set null');
-            $table->foreignId('city_id')->nullable()->constrained()->onDelete('set null');
+            $table->text('address')->nullable(); $table->foreignId('province_id')->nullable()->constrained('province')->onDelete('set null');
+            $table->foreignId('city_id')->nullable()->constrained('city')->onDelete('set null');
             $table->text('operating_hours')->nullable();
             $table->text('notes')->nullable();
             $table->boolean('is_active')->default(true);

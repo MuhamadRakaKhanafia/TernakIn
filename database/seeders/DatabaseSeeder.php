@@ -16,7 +16,6 @@ class DatabaseSeeder extends Seeder
             CitySeeder::class,
             AnimalTypeSeeder::class,
             DiseasesSeeder::class,
-            DiseaseRelationsSeeder::class
             // Tambahkan seeder lainnya di sini
         ]);
     }

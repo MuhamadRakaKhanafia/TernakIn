@@ -50,6 +50,17 @@ class ProvinceSeeder extends Seeder
             ['name' => 'Papua Barat Daya', 'code' => '96'],
         ];
 
-        DB::table('province')->insert($provinces);
+        // Gunakan updateOrCreate dengan DB facade
+        foreach ($provinces as $province) {
+            $existing = DB::table('province')->where('code', $province['code'])->first();
+            
+            if ($existing) {
+                DB::table('province')
+                    ->where('code', $province['code'])
+                    ->update($province);
+            } else {
+                DB::table('province')->insert($province);
+            }
+        }
     }
 }

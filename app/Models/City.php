@@ -9,15 +9,19 @@ class City extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['province_id', 'name'];
+    // Tentukan nama tabel secara eksplisit
+    protected $table = 'city';
 
+    protected $fillable = [
+        'province_id',
+        'name',
+        'type',
+        'code'
+    ];
+
+    // Relasi dengan province
     public function province()
     {
         return $this->belongsTo(Province::class);
-    }
-
-    public function userLocations()
-    {
-        return $this->hasMany(UserLocation::class);
     }
 }

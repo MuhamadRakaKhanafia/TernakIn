@@ -9,15 +9,17 @@ class Symptom extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'disease_id',
-        'symptom_name',
-        'description',
-        'severity_level'
+    protected $fillable = ['name', 'description', 'category', 'is_active'];
+
+    protected $casts = [
+        'is_active' => 'boolean'
     ];
 
-    public function disease()
+    // Relasi many-to-many dengan diseases
+    public function diseases()
     {
-        return $this->belongsTo(Disease::class);
+        return $this->belongsToMany(Disease::class, 'disease_symptoms')
+                    ->withPivot('probability', 'is_primary', 'notes')
+                    ->withTimestamps();
     }
 }

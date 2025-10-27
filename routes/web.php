@@ -57,7 +57,7 @@ Route::middleware(['auth'])->group(function () {
         return view('index');
     })->name('dashboard');
 
-    // AI Chat Route - TAMBAHKAN INI
+    // AI Chat Route
     Route::get('/chat', [AiChatController::class, 'index'])->name('chat.index');
 
     // Animal Types

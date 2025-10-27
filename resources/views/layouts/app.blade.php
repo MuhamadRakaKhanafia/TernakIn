@@ -87,8 +87,7 @@
                 <h2>@yield('page-title', 'Dashboard TernakIN')</h2>
                 <div class="header-actions">
                     @guest
-                        <a href="{{ route('login') }}" class="btn btn-outline-primary">
-                            <i class="fas fa-sign-in-alt"></i> Login
+                        <a href="{{ route('login') }}" class="btn btn-outline-primary"> Login
                         </a>
                     @else
                         <div class="user-info">
@@ -96,8 +95,7 @@
                             <span>{{ Auth::user()->name }}</span>
                             <form method="POST" action="{{ route('logout') }}" style="display: inline;">
                                 @csrf
-                                <button type="submit" class="btn btn-outline-danger btn-sm">
-                                    <i class="fas fa-sign-out-alt"></i> Logout
+                                <button type="submit" class="btn btn-outline-danger btn-sm"> Logout
                                 </button>
                             </form>
                         </div>

@@ -18,12 +18,16 @@
                     <span class="stat-label">Zoonosis</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-number">{{ $diseases->where('causative_agent', 'like', '%virus%')->count() }}</span>
+                    <span class="stat-number">{{ $diseases->where('is_viral', 1)->count() }}</span>
                     <span class="stat-label">Penyakit Viral</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-number">{{ $diseases->where('causative_agent', 'like', '%bakteri%')->count() }}</span>
+                    <span class="stat-number">{{ $diseases->where('is_bakterial', 1)->count() }}</span>
                     <span class="stat-label">Penyakit Bakterial</span>
+                </div>
+                 <div class="stat-item">
+                    <span class="stat-number">{{ $diseases->where('is_parasite', 1)->count() }}</span>
+                    <span class="stat-label">Penyakit Parasite</span>
                 </div>
             </div>
         </div>

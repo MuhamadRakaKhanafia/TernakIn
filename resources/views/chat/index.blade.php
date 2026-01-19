@@ -119,8 +119,13 @@
             <div class="message-content" style="max-width: calc(100% - 50px);">
                 <div class="message-bubble" style="background: white; border: 1px solid #e2e8f0; color: #2d3748; border-radius: 18px 18px 18px 4px; padding: 12px 18px; max-width: 70%; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);">
                     <div class="message-text" style="line-height: 1.6; font-size: 0.95rem; word-wrap: break-word; white-space: pre-wrap;"></div>
-                    <div class="message-time" style="font-size: 0.75rem; margin-top: 6px; opacity: 0.7; text-align: left;">
-                        <span class="time-text"></span>
+                    <div class="message-actions" style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+                        <div class="message-time" style="font-size: 0.75rem; opacity: 0.7; text-align: left;">
+                            <span class="time-text"></span>
+                        </div>
+                        <button class="btn btn-sm btn-outline-secondary reload-btn" style="font-size: 0.7rem; padding: 2px 8px; border-radius: 12px; display: none;" title="Reload response">
+                            <i class="fas fa-redo"></i> Reload
+                        </button>
                     </div>
                 </div>
             </div>
@@ -822,7 +827,7 @@ class ChatSystem {
 
     bindEvents() {
         console.log('🔗 Binding events...');
-        
+
         // Send message form
         const sendForm = document.getElementById('sendMessageForm');
         if (sendForm) {
@@ -841,10 +846,21 @@ class ChatSystem {
                     this.sendMessage();
                 }
             });
-            
+
             // Auto resize
             messageInput.addEventListener('input', () => {
                 this.autoResizeTextarea();
+            });
+        }
+
+        // Reload button event delegation
+        const messagesContainer = document.getElementById('messagesContainer');
+        if (messagesContainer) {
+            messagesContainer.addEventListener('click', (e) => {
+                if (e.target.classList.contains('reload-btn')) {
+                    e.preventDefault();
+                    this.reloadMessage(e.target);
+                }
             });
         }
     }
@@ -917,7 +933,7 @@ class ChatSystem {
             const timeoutId = setTimeout(() => controller.abort(), 30000);
 
             const response = await fetch(
-                `/chat/sessions/${this.currentSession.session_id}/send`,
+                `/api/chat/sessions/${this.currentSession.session_id}/message`,
                 {
                     method: 'POST',
                     headers: {
@@ -992,7 +1008,8 @@ class ChatSystem {
                 const errorMsg = responseData?.error || responseData?.message || 'Terjadi kesalahan';
                 console.error('❌ API Error:', errorMsg);
                 this.showError('AI Error: ' + errorMsg);
-                this.displayMessage('assistant', 'Maaf, terjadi kesalahan: ' + errorMsg);
+                // Display the actual error message from API response
+                this.displayMessage('assistant', errorMsg);
             }
         } catch (error) {
             console.error('💥 Send message error:', error);
@@ -1035,7 +1052,7 @@ class ChatSystem {
             formData.append('_token', '{{ csrf_token() }}');
 
             const response = await fetch(
-                `/chat/sessions/${this.currentSession.session_id}/send`,
+                `/api/chat/sessions/${this.currentSession.session_id}/message`,
                 {
                     method: 'POST',
                     headers: {
@@ -1177,7 +1194,7 @@ class ChatSystem {
             formData.append('animal_type_id', 1);
             formData.append('_token', '{{ csrf_token() }}');
 
-            const response = await fetch('/chat/sessions/start', {
+            const response = await fetch('/api/chat/sessions/start', {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -1203,6 +1220,171 @@ class ChatSystem {
         } catch (error) {
             console.error('❌ Failed to start quick session:', error);
             this.showError('Gagal memulai sesi: ' + error.message);
+        }
+    }
+
+    reloadMessage(buttonElement) {
+        console.log('🔄 Reload message called');
+
+        if (this.isLoading) {
+            console.log('⏳ Already loading, skip reload');
+            return;
+        }
+
+        // Find the AI message element that contains this button
+        const aiMessageElement = buttonElement.closest('.ai-message');
+        if (!aiMessageElement) {
+            console.error('❌ AI message element not found');
+            return;
+        }
+
+        // Find the previous user message
+        const messagesContainer = document.getElementById('messagesContainer');
+        const allMessages = messagesContainer.querySelectorAll('.message');
+        let userMessage = null;
+
+        // Loop backwards to find the last user message before this AI message
+        for (let i = Array.from(allMessages).indexOf(aiMessageElement) - 1; i >= 0; i--) {
+            const msg = allMessages[i];
+            if (msg.classList.contains('user-message')) {
+                const messageText = msg.querySelector('.message-text');
+                if (messageText) {
+                    userMessage = messageText.textContent.trim();
+                    break;
+                }
+            }
+        }
+
+        if (!userMessage) {
+            console.error('❌ No user message found to reload');
+            this.showError('Tidak dapat menemukan pesan untuk di-reload');
+            return;
+        }
+
+        console.log('📝 Reloading with user message:', userMessage);
+
+        // Remove the current AI message
+        aiMessageElement.remove();
+
+        // Resend the message
+        this.resendMessage(userMessage);
+    }
+
+    async resendMessage(message) {
+        console.log('🔄 Resending message:', message);
+
+        if (this.isLoading) {
+            return;
+        }
+
+        const sendBtn = document.getElementById('sendMessageBtn');
+        if (!sendBtn) return;
+
+        try {
+            this.isLoading = true;
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin fs-6"></i>';
+
+            // Show loading indicator
+            this.showLoading(true);
+            this.hideError();
+
+            console.log('📤 Resending to API, session:', this.currentSession.session_id);
+
+            // Gunakan FormData untuk menghindari CORS dan content-type issues
+            const formData = new FormData();
+            formData.append('message', message);
+            formData.append('session_id', this.currentSession.session_id);
+            formData.append('_token', '{{ csrf_token() }}');
+
+            // API call dengan timeout
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+            const response = await fetch(
+                `/api/chat/sessions/${this.currentSession.session_id}/message`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: formData,
+                    signal: controller.signal
+                }
+            );
+
+            clearTimeout(timeoutId);
+
+            console.log('📥 Reload response status:', response.status);
+
+            if (!response.ok) {
+                let errorMessage = `HTTP error! status: ${response.status}`;
+                if (response.status === 500) {
+                    errorMessage = 'Server sedang mengalami masalah. Silakan coba lagi.';
+                }
+                throw new Error(errorMessage);
+            }
+
+            const responseData = await response.json();
+            console.log('📦 Reload API Response:', responseData);
+
+            this.showLoading(false);
+
+            if (responseData && responseData.success) {
+                console.log('✅ Reload API Response successful');
+
+                // Extract AI content
+                let aiContent = '';
+
+                if (responseData.data?.ai_response?.content) {
+                    aiContent = responseData.data.ai_response.content;
+                } else if (responseData.data?.content) {
+                    aiContent = responseData.data.content;
+                } else if (typeof responseData.data === 'string') {
+                    aiContent = responseData.data;
+                } else if (responseData.ai_response?.content) {
+                    aiContent = responseData.ai_response.content;
+                } else if (responseData.content) {
+                    aiContent = responseData.content;
+                } else if (responseData.message) {
+                    aiContent = responseData.message;
+                } else {
+                    aiContent = 'Terima kasih atas pertanyaan Anda!';
+                }
+
+                console.log('🤖 Reload extracted AI Content:', aiContent);
+
+                // Display AI message
+                console.log('🤖 Displaying reloaded AI message...');
+                this.displayMessage('assistant', aiContent);
+
+            } else {
+                const errorMsg = responseData?.error || responseData?.message || 'Terjadi kesalahan';
+                console.error('❌ Reload API Error:', errorMsg);
+                this.showError('Reload Error: ' + errorMsg);
+                this.displayMessage('assistant', errorMsg);
+            }
+        } catch (error) {
+            console.error('💥 Reload message error:', error);
+            this.showLoading(false);
+
+            let errorMsg = error.message;
+            if (error.name === 'AbortError') {
+                errorMsg = 'Request timeout. Silakan coba lagi.';
+            } else if (error.message.includes('Failed to fetch')) {
+                errorMsg = 'Koneksi internet terputus. Periksa koneksi Anda.';
+            }
+
+            this.showError(errorMsg);
+            this.displayMessage('assistant', 'Maaf, terjadi kesalahan saat reload: ' + errorMsg);
+        } finally {
+            this.isLoading = false;
+            if (sendBtn) {
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = '<i class="fas fa-paper-plane fs-6"></i>';
+            }
         }
     }
 

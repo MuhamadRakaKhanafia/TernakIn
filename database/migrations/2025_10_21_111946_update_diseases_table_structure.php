@@ -31,6 +31,18 @@ return new class extends Migration
                 if (!Schema::hasColumn('diseases', 'image')) {
                     $table->string('image')->nullable()->after('is_active');
                 }
+
+                 if (!Schema::hasColumn('diseases', 'is_parasite')) {
+                    $table->boolean('is_parasite')->default(false)->after('risk_factors');
+                }
+
+                 if (!Schema::hasColumn('diseases', 'is_bakterial')) {
+                    $table->boolean('is_bakterial')->default(false)->after('risk_factors');
+                }
+
+                 if (!Schema::hasColumn('diseases', 'is_viral')) {
+                    $table->boolean('is_viral')->default(false)->after('risk_factors');
+                }
             });
         }
     }

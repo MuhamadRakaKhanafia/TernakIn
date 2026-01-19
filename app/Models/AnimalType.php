@@ -13,29 +13,10 @@ class AnimalType extends Model
     protected $table = 'animal_types';
 
     protected $fillable = [
-    'name',
-    'identification_number', 
-    'animal_type_id',
-    'sex',
-    'birth_date',
-    'acquisition_date',
-    'age_weeks',
-    'age_months', 
-    'weight_kg',
-    'health_status',
-    'vaccination_status',
-    'feed_type',
-    'daily_feed_kg',
-    'housing_type',
-    'notes',
-    'strain',
-    'breed',
-    'purpose',
-    'egg_production',
-    'milk_production_liter',
-    'pregnancy_status',
-    'flock_size'
-];
+        'name',
+        'description',
+        'category'
+    ];
 
     /**
      * Relationship with Livestock

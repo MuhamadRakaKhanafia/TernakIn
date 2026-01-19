@@ -3,54 +3,21 @@
     --primary-color: #00A693; /* Bright, Modern Emerald (Main Accent) */
     --primary-dark: #007A69; /* Deep Emerald for Hover/Strong Elements */
     --primary-light: #51D8C1; /* Soft Emerald for Subtle Highlights */
-    
+
     /* Secondary & Background Colors */
     --secondary-color: #2C3E50; /* Deep Navy Blue (Dark/Secondary Accent, used for the Top Navbar/Header) */
     --accent-color: #F39C12; /* Goldenrod Yellow for Alerts, CTAs, and High Contrast */
-    
+
     /* Text and Background */
     --text-dark: #34495E; /* Dark charcoal for high contrast text */
     --text-light: #ECF0F1; /* Near-white text on dark backgrounds */
     --bg-light: #FFFFFF; /* Pure white for main content blocks */
     --bg-page: #F4F7F9; /* Very light gray for body background (soft and smooth) */
-    
+
     /* Global Styles */
     --border-radius: 10px; /* Standardized radius */
     --shadow: 0 8px 20px rgba(0, 0, 0, 0.08); /* Soft, pronounced global shadow */
-    --transition: all 0.4s ease-in-out; 
-}
-
-/* Base Styles */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-body {
-    background-color: var(--bg-page);
-    color: var(--text-dark);
-    line-height: 1.6;:root {
-    /* Color Palette: Modern Emerald & Navy */
-    --primary-color: #00A693; /* Bright, Modern Emerald (Main Accent) */
-    --primary-dark: #007A69; /* Deep Emerald for Hover/Strong Elements */
-    --primary-light: #51D8C1; /* Soft Emerald for Subtle Highlights */
-    
-    /* Secondary & Background Colors */
-    --secondary-color: #2C3E50; /* Deep Navy Blue (Dark/Secondary Accent, used for the Top Navbar/Header) */
-    --accent-color: #F39C12; /* Goldenrod Yellow for Alerts, CTAs, and High Contrast */
-    
-    /* Text and Background */
-    --text-dark: #34495E; /* Dark charcoal for high contrast text */
-    --text-light: #ECF0F1; /* Near-white text on dark backgrounds */
-    --bg-light: #FFFFFF; /* Pure white for main content blocks */
-    --bg-page: #F4F7F9; /* Very light gray for body background (soft and smooth) */
-    
-    /* Global Styles */
-    --border-radius: 10px; /* Standardized radius */
-    --shadow: 0 8px 20px rgba(0, 0, 0, 0.08); /* Soft, pronounced global shadow */
-    --transition: all 0.4s ease-in-out; 
+    --transition: all 0.4s ease-in-out;
 }
 
 /* Base Styles */
@@ -75,6 +42,81 @@ body {
 /* ---------------------------------------------------------------------- */
 /* Top Navbar (Header) - ENHANCED & LARGER */
 /* ---------------------------------------------------------------------- */
+/* FORCE NAVBAR VISIBILITY - Override all conflicting styles */
+nav,
+nav.bg-white,
+nav.shadow-lg,
+nav.sticky,
+nav[class*="bg-white"],
+nav[class*="shadow-lg"],
+nav[class*="sticky"],
+nav.bg-white.shadow-lg.sticky {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 9999 !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 64px !important;
+    background: white !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+    transform: none !important;
+    margin: 0 !important;
+    padding: 1rem 2rem !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    border: none !important;
+    overflow: visible !important;
+}
+
+/* Ensure navbar container is visible */
+nav.bg-white.shadow-lg.sticky .max-w-7xl {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+/* Ensure navbar flex container is visible */
+nav.bg-white.shadow-lg.sticky .flex {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+}
+
+/* Force all navbar children to be visible */
+nav * {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Specific navbar elements */
+nav .flex.justify-between.items-center {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+}
+
+nav .hidden.md\\:flex {
+    display: flex !important;
+}
+
+nav .md\\:hidden {
+    display: none !important;
+}
+
+/* Mobile menu button */
+nav .md\\:hidden button {
+    display: block !important;
+}
+
+/* Legacy navbar styles (kept for compatibility) */
 .navbar {
     /* Menggunakan Deep Navy Blue sebagai latar belakang */
     background-color: var(--secondary-color);
@@ -83,9 +125,9 @@ body {
     justify-content: space-between;
     align-items: center;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); /* Bayangan yang lebih jelas */
-    position: sticky; 
+    position: sticky;
     top: 0;
-    z-index: 1000; 
+    z-index: 1000;
     transition: background-color 0.3s ease;
 }
 
@@ -136,13 +178,13 @@ body {
     letter-spacing: -0.5px;
     margin-left: 10px; /* Jarak dari ikon/gambar logo */
     line-height: 1; /* Memastikan penataan vertikal yang baik */
-    
+
     /* Efek Gradien */
     background: linear-gradient(135deg, var(--primary-light), var(--primary-color));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    
+
     transition: var(--transition);
 }
 
@@ -153,13 +195,13 @@ body {
 
 /* Ikon/Gambar Logo Navbar - DIPERBESAR */
 .logo-img-navbar {
-    height: 30px; 
+    height: 30px;
     width: 30px;
     min-width: 30px; /* Memastikan ukuran tetap */
     border-radius: 5px;
     object-fit: cover;
     transition: var(--transition);
-    border: 2px solid transparent; 
+    border: 2px solid transparent;
     box-shadow: 0 4px 5px rgba(0, 0, 0, 0.1);
 }
 
@@ -340,25 +382,28 @@ th {
         align-items: flex-start;
         gap: 15px;
     }
-    
+
     .dashboard-cards {
         grid-template-columns: 1fr; /* Stack cards on smaller screens */
     }
-    
-    /* Responsive Navbar untuk Mobile */
+
+    /* Responsive Navbar untuk Mobile - Keep navbar visible */
     .navbar {
         padding: 10px 20px;
+        display: block !important; /* Force navbar to be visible */
+        visibility: visible !important;
+        opacity: 1 !important;
     }
-    
+
     .navbar-nav {
         /* Pilihan: Sembunyikan link navigasi untuk mobile/tambahkan menu hamburger */
-        display: none; 
+        display: none;
     }
-    
+
     .logo-text-navbar {
-        font-size: 1.5rem; 
+        font-size: 1.5rem;
     }
-    
+
     .logo-img-navbar, .logo-fallback i {
         height: 24px;
         width: 24px;
@@ -370,141 +415,17 @@ th {
     .main-content {
         padding: 15px;
     }
-    
+
     .content-header h2 {
         font-size: 24px;
     }
-    
+
     .btn {
         padding: 8px 15px;
         font-size: 12px;
     }
 }
-}
 
-/* Container is no longer flex-column/row, just wraps main content */
-.container {
-    min-height: 100vh;
-}
-
-/* ---------------------------------------------------------------------- */
-/* Main Content Area */
-/* ---------------------------------------------------------------------- */
-.main-content {
-    /* Adjusted padding as there is no sidebar */
-    padding: 30px;
-    overflow-y: auto;
-}
-
-.content-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
-}
-
-.content-header h2 {
-    font-size: 28px;
-    font-weight: 700;
-    color: var(--text-dark);
-}
-
-/* Button Styles (Refined) */
-.btn {
-    padding: 10px 20px;
-    border-radius: var(--border-radius);
-    font-size: 14px;
-    font-weight: 600;
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
-}
-
-.btn-primary {
-    background-color: var(--primary-color);
-    border-color: var(--primary-color);
-}
-
-.btn-primary:hover {
-    background-color: var(--primary-dark);
-    transform: translateY(-1px);
-    box-shadow: 0 6px 12px rgba(0, 166, 147, 0.3);
-}
-
-/* ---------------------------------------------------------------------- */
-/* Dashboard Cards (Refined) */
-/* ---------------------------------------------------------------------- */
-.dashboard-cards {
-    gap: 25px;
-    margin-bottom: 40px;
-}
-
-.card {
-    background-color: var(--bg-light);
-    border-radius: var(--border-radius);
-    padding: 25px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    border-top: 4px solid transparent;
-}
-
-.card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.1);
-    border-top-color: var(--primary-color);
-}
-
-.card-title {
-    font-size: 16px;
-    color: var(--text-dark);
-    opacity: 0.7;
-}
-
-.card-icon {
-    background-color: var(--primary-light);
-    color: var(--secondary-color);
-    width: 45px;
-    height: 45px;
-    font-size: 20px;
-}
-
-.card-content {
-    font-size: 32px;
-    color: var(--primary-dark);
-}
-
-/* ---------------------------------------------------------------------- */
-/* Tables and Status Badges (Clean Lines) */
-/* ---------------------------------------------------------------------- */
-.table-container {
-    background-color: var(--bg-light);
-    border-radius: var(--border-radius);
-    padding: 25px;
-    box-shadow: var(--shadow);
-}
-
-th {
-    background-color: var(--bg-page);
-    color: var(--text-dark);
-    font-weight: 600;
-    text-transform: uppercase;
-}
-
-/* Status remains the same, leveraging the Emerald/Accent colors */
-
-/* ---------------------------------------------------------------------- */
-/* Responsive Design */
-/* ---------------------------------------------------------------------- */
-@media (max-width: 768px) {
-    .content-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 15px;
-    }
-}
-
-@media (max-width: 576px) {
-    .main-content {
-        padding: 15px;
-    }
-}
 /* CSS untuk Logo dan Fallback */
 .logo-container {
     position: relative;
@@ -572,11 +493,11 @@ th {
         width: 24px;
         margin-right: 8px;
     }
-    
+
     .logo-text {
         font-size: 1.25rem;
     }
-    
+
     .logo-fallback i {
         font-size: 10px;
     }

@@ -13,6 +13,17 @@
     </div>
     @endif
 
+    <!-- Header -->
+    <div class="content-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="page-title">Analytics Semua User</h1>
+            </div>
+            <a href="{{ route('admin.dashboard') }}" class="btn btn-back">
+                <i class="fas fa-arrow-left me-2"></i>Kembali ke Dashboard
+            </a>
+        </div>
+    </div>
     <!-- Statistik Utama - Horizontal Layout dengan Spacing -->
     <div class="row justify-content-center mb-4">
         <div class="col-xxl-8 col-xl-10">
@@ -277,6 +288,64 @@
     --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
     --shadow-glow: 0 0 20px rgba(16, 185, 129, 0.15);
 }
+
+/* Header Section */
+.content-header {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    margin-bottom: 1.5rem;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    margin-top: 0;
+}
+
+.content-header .d-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+}
+
+.page-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 0;
+    letter-spacing: -0.025em;
+}
+
+/* Tombol Kembali */
+.btn-back {
+    background: #f1f5f9;
+    color: #374151;
+    border: 1px solid #d1d5db;
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    text-decoration: none;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.btn-back:hover {
+    background: #e2e8f0;
+    border-color: #9ca3af;
+    color: #111827;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    text-decoration: none;
+}
+
+.btn-back i {
+    font-size: 0.9rem;
+}
+
 
 /* Container & Layout */
 .container-fluid {

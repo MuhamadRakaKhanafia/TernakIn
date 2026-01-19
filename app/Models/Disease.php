@@ -9,7 +9,11 @@ class Disease extends Model
 {
     use HasFactory;
 
+    /**
+     * @property int $id
+     */
     protected $table = 'diseases';
+    protected $primaryKey = 'id';
 
     protected $fillable = [
         'disease_code',
@@ -54,5 +58,25 @@ class Disease extends Model
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
+    }
+
+    /**
+     * Get the ID of the disease
+     *
+     * @return int
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    /**
+     * Get the ID of the disease (for linter compatibility)
+     *
+     * @return int
+     */
+    public function id()
+    {
+        return $this->getKey();
     }
 }

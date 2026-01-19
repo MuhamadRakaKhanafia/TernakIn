@@ -15,7 +15,11 @@ class DatabaseSeeder extends Seeder
             ProvinceSeeder::class,
             CitySeeder::class,
             AnimalTypeSeeder::class,
+            SymptomSeeder::class,
             DiseasesSeeder::class,
+            AdminSeeder::class,
+            LivestockSeeder::class,
+            AdditionalLivestockSeeder::class,
             // Tambahkan seeder lainnya di sini
         ]);
     }

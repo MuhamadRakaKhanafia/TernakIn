@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Cache\RateLimiting\Limit;
 
 class User extends Authenticatable
 {
@@ -22,7 +24,8 @@ class User extends Authenticatable
         'is_active',
         'provider',
         'provider_id',
-        'avatar'
+        'avatar',
+        'profile_picture'
     ];
 
     protected $hidden = [
@@ -55,6 +58,16 @@ class User extends Authenticatable
     public function aiUsageAnalytics()
     {
         return $this->hasMany(AiUsageAnalytic::class);
+    }
+
+    public function livestocks()
+    {
+        return $this->hasMany(Livestock::class);
+    }
+
+    public function vaccinations()
+    {
+        return $this->hasMany(Vaccination::class);
     }
 
     // Scope untuk peternak

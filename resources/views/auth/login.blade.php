@@ -291,7 +291,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
 
         if (data.success) {
             // Redirect to dashboard
-            window.location.href = data.redirect_url || '{{ route("dashboard") }}';
+            window.location.href = data.redirect_url || '{{ route("welcome") }}';
         } else {
             // Show errors
             if (data.errors) {

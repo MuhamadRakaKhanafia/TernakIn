@@ -15,6 +15,8 @@ return new class extends Migration {
             $table->text('description')->nullable();
             $table->enum('mortality_rate', ['rendah', 'sedang', 'tinggi', 'sangat_tinggi']);
             $table->boolean('is_zoonotic')->default(false);
+            $table->boolean('is_parasite')->default(false);
+            $table->boolean('is_bakterial')->default(false);
             $table->text('transmission_method')->nullable();
             $table->text('diagnosis_method')->nullable();
             $table->text('general_treatment')->nullable();

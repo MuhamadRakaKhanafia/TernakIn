@@ -418,7 +418,7 @@ document.getElementById('province_id').addEventListener('change', function() {
         citySelect.disabled = false;
         citySelect.innerHTML = '<option value="">Memuat data kota...</option>';
 
-        fetch(`/api/cities/${provinceId}`)
+        fetch(`/api/provinces/${provinceId}/cities`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
@@ -560,7 +560,7 @@ document.getElementById('registerForm').addEventListener('submit', async functio
 
             // Redirect to dashboard after 2 seconds
             setTimeout(() => {
-                window.location.href = data.redirect_url || '{{ route("dashboard") }}';
+                window.location.href = data.redirect_url || '{{ route("welcome") }}';
             }, 2000);
 
         } else {

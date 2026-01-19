@@ -649,12 +649,21 @@
         <!-- Hero Actions -->
         <div class="hero-actions">
             @auth
-                <a href="{{ route('dashboard') }}" class="btn btn-primary btn-lg">
-                    <i class="fas fa-tachometer-alt me-2"></i> Ke Dashboard
-                </a>
-                <a href="{{ route('livestock.index') }}" class="btn btn-outline-light btn-lg">
-                    <i class="fas fa-cow me-2"></i> Kelola Hewan Ternak
-                </a>
+                @if(Auth::user()->isAdmin())
+                    <a href="{{ route('admin.dashboard') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-tachometer-alt me-2"></i> Dashboard Admin
+                    </a>
+                    <a href="{{ route('livestocks.index') }}" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-cow me-2"></i> Kelola Hewan Ternak
+                    </a>
+                @else
+                    <a href="{{ route('livestocks.index') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-cow me-2"></i> Kelola Hewan Ternak
+                    </a>
+                    <a href="{{ route('livestocks.create') }}" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-plus me-2"></i> Tambah Hewan Ternak
+                    </a>
+                @endif
             @else
                 <a href="{{ route('register') }}" class="btn btn-primary btn-lg">
                     <i class="fas fa-user-plus me-2"></i> Daftar Sekarang
@@ -680,7 +689,7 @@
                 <h3>Manajemen Data Ternak</h3>
                 <p>Kelola data hewan ternak secara terpusat. Catat riwayat kesehatan, vaksinasi, dan perkembangan setiap hewan dengan sistem yang terorganisir.</p>
                 @auth
-                    <a href="{{ route('livestock.index') }}" class="feature-link">
+                    <a href="{{ route('livestocks.index') }}" class="feature-link">
                         Kelola Ternak <i class="fas fa-arrow-right"></i>
                     </a>
                 @else
@@ -696,7 +705,7 @@
                 </div>
                 <h3>Deteksi Penyakit</h3>
                 <p>Identifikasi gejala penyakit secara dini. Akses database lengkap penyakit hewan ternak beserta cara penanganan yang tepat.</p>
-                <a href="{{ route('diseases.public.index') }}" class="feature-link">
+                <a href="{{ route('diseases.index') }}" class="feature-link">
                     Pelajari Penyakit <i class="fas fa-arrow-right"></i>
                 </a>
             </div>
@@ -759,19 +768,19 @@
         <h2 class="section-title">TernakIN dalam Angka</h2>
         <div class="stats-grid">
             <div class="stat-item">
-                <div class="stat-number" data-target="1250">0</div>
+                <div class="stat-number" data-target="{{ $totalLivestock }}">0</div>
                 <div class="stat-label">Hewan Ternak Terdaftar</div>
             </div>
             <div class="stat-item">
-                <div class="stat-number" data-target="45">0</div>
+                <div class="stat-number" data-target="{{ $totalDiseases }}">0</div>
                 <div class="stat-label">Penyakit Terdata</div>
             </div>
             <div class="stat-item">
-                <div class="stat-number" data-target="780">0</div>
+                <div class="stat-number" data-target="{{ $totalUsers }}">0</div>
                 <div class="stat-label">Peternak Bergabung</div>
             </div>
             <div class="stat-item">
-                <div class="stat-number" data-target="98">0</div>
+                <div class="stat-number" data-target="{{ $healthyPercentage }}">0</div>
                 <div class="stat-label">Tingkat Kesehatan (%)</div>
             </div>
         </div>
@@ -780,19 +789,33 @@
     <!-- CTA Section -->
     <div class="cta-section">
         <div class="cta-content">
+            @auth
+                @if(Auth::user()->isAdmin())
+            <h2>Kelola Sistem TernakIN</h2>
+            <p>Akses dashboard admin untuk mengelola pengguna, vaksinasi, dan data sistem</p>
+            <div class="cta-actions">
+                <a href="{{ route('admin.dashboard') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-tachometer-alt me-2"></i> Dashboard Admin
+                </a>
+            </div>
+                @else
+            <h2>Siap Mengelola Ternak dengan Lebih Baik?</h2>
+            <p>Tambahkan hewan ternak baru atau lihat analitik kesehatan ternak Anda</p>
+            <div class="cta-actions">
+                <a href="{{ route('livestocks.create') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-plus me-2"></i> Tambah Hewan Ternak
+                </a>
+            </div>
+                @endif
+            @else
             <h2>Siap Mengelola Ternak dengan Lebih Baik?</h2>
             <p>Bergabunglah dengan ratusan peternak yang telah mempercayakan manajemen kesehatan ternak mereka kepada TernakIN</p>
             <div class="cta-actions">
-                @auth
-                    <a href="{{ route('livestock.create') }}" class="btn btn-primary btn-lg">
-                        <i class="fas fa-plus me-2"></i> Tambah Hewan Ternak
-                    </a>
-                @else
-                    <a href="{{ route('register') }}" class="btn btn-primary btn-lg">
-                        <i class="fas fa-user-plus me-2"></i> Mulai Sekarang
-                    </a>
-                @endauth
+                <a href="{{ route('register') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-user-plus me-2"></i> Mulai Sekarang
+                </a>
             </div>
+            @endauth
         </div>
     </div>
 </div>

@@ -7,11 +7,18 @@ use App\Models\UserLocation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
+    public function showLoginForm()
+    {
+        return view('auth.login');
+    }
+
     public function showRegistrationForm()
     {
         $provinces = DB::table('province')->orderBy('name')->get();
@@ -91,12 +98,12 @@ class AuthController extends Controller
                 return response()->json([
                     'success' => true,
                     'message' => 'Registrasi berhasil!',
-                    'redirect_url' => route('dashboard')
+                    'redirect_url' => route('welcome')
                 ], 201);
             }
 
             // Redirect untuk form submission biasa
-            return redirect()->route('dashboard')
+            return redirect()->route('welcome')
                 ->with('success', 'Registrasi berhasil! Selamat datang.');
 
         } catch (\Exception $e) {
@@ -145,11 +152,11 @@ class AuthController extends Controller
                 return response()->json([
                     'success' => true,
                     'message' => 'Login berhasil!',
-                    'redirect_url' => route('dashboard')
+                    'redirect_url' => route('welcome')
                 ]);
             }
-            
-            return redirect()->route('dashboard')
+
+            return redirect()->route('welcome')
                 ->with('success', 'Login berhasil! Selamat datang kembali.');
         }
 
@@ -187,7 +194,8 @@ class AuthController extends Controller
     public function profile(Request $request)
     {
         $user = $request->user()->load(['location.province', 'location.city']);
-        
+        $provinces = DB::table('province')->orderBy('name')->get();
+
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
@@ -195,7 +203,7 @@ class AuthController extends Controller
             ]);
         }
 
-        return view('auth.profile', compact('user'));
+        return view('auth.profile', compact('user', 'provinces'));
     }
 
     public function updateProfile(Request $request)
@@ -210,16 +218,18 @@ class AuthController extends Controller
             'district' => 'nullable|string|max:100',
             'village' => 'nullable|string|max:100',
             'detailed_address' => 'nullable|string',
+            'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120', // 5MB max
         ]);
 
         if ($validator->fails()) {
-            if ($request->expectsJson()) {
+            // Check if this is an AJAX request (either JSON or FormData)
+            if ($request->expectsJson() || $request->ajax() || $request->header('Accept') === 'application/json') {
                 return response()->json([
                     'success' => false,
                     'errors' => $validator->errors()
                 ], 422);
             }
-            
+
             return redirect()->back()
                 ->withErrors($validator)
                 ->withInput();
@@ -227,23 +237,49 @@ class AuthController extends Controller
 
         DB::beginTransaction();
         try {
+            // Handle profile picture upload
+            if ($request->hasFile('profile_picture')) {
+                // Delete old profile picture if exists
+                if ($user->profile_picture && Storage::disk('public')->exists($user->profile_picture)) {
+                    Storage::disk('public')->delete($user->profile_picture);
+                }
+
+                // Store new profile picture
+                $profilePicturePath = $request->file('profile_picture')->store('profile-pictures', 'public');
+                $user->profile_picture = $profilePicturePath;
+                $user->save();
+            }
+
             // Update user
             $user->update($request->only(['name', 'phone']));
 
-            // Update location
-            if ($user->location && ($request->province_id || $request->city_id)) {
-                $user->location->update([
-                    'province_id' => $request->province_id ?? $user->location->province_id,
-                    'city_id' => $request->city_id ?? $user->location->city_id,
-                    'district' => $request->district,
-                    'village' => $request->village,
-                    'detailed_address' => $request->detailed_address,
-                ]);
+            // Update or create location
+            if ($request->province_id || $request->city_id || $request->district || $request->village || $request->detailed_address) {
+                if ($user->location) {
+                    $user->location->update([
+                        'province_id' => $request->province_id ?? $user->location->province_id,
+                        'city_id' => $request->city_id ?? $user->location->city_id,
+                        'district' => $request->district,
+                        'village' => $request->village,
+                        'detailed_address' => $request->detailed_address,
+                    ]);
+                } else {
+                    $location = UserLocation::create([
+                        'province_id' => $request->province_id,
+                        'city_id' => $request->city_id,
+                        'district' => $request->district,
+                        'village' => $request->village,
+                        'detailed_address' => $request->detailed_address,
+                    ]);
+                    $user->location_id = $location->id;
+                    $user->save();
+                }
             }
 
             DB::commit();
 
-            if ($request->expectsJson()) {
+            // Check if this is an AJAX request (either JSON or FormData)
+            if ($request->expectsJson() || $request->ajax() || $request->header('Accept') === 'application/json') {
                 return response()->json([
                     'success' => true,
                     'message' => 'Profil berhasil diperbarui',
@@ -256,14 +292,22 @@ class AuthController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            
-            if ($request->expectsJson()) {
+
+            // Log the error for debugging
+            Log::error('Profile update error: ' . $e->getMessage(), [
+                'user_id' => $user->id,
+                'request_data' => $request->all(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            // Check if this is an AJAX request (either JSON or FormData)
+            if ($request->expectsJson() || $request->ajax() || $request->header('Accept') === 'application/json') {
                 return response()->json([
                     'success' => false,
-                    'error' => 'Gagal memperbarui profil: ' . $e->getMessage()
+                    'message' => 'Terjadi kesalahan. Silakan coba lagi.'
                 ], 500);
             }
-            
+
             return redirect()->back()
                 ->with('error', 'Gagal memperbarui profil: ' . $e->getMessage());
         }

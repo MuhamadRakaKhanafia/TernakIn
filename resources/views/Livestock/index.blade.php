@@ -8,6 +8,7 @@
     <!-- Flash Messages -->
     @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i>
         {{ session('success') }}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
@@ -15,18 +16,19 @@
 
     @if(session('error'))
     <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>
         {{ session('error') }}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
     @endif
 
-    <!-- Header dengan Filter - STRUCTURE DIPERBAIKI -->
+    <!-- Header dengan Filter -->
     <div class="content-header">
         <div class="filter-section">
             <select id="typeFilter" class="form-select">
                 <option value="">Semua Jenis Hewan</option>
                 @foreach($animalTypes as $type)
-                <option value="{{ $type->name }}" {{ request('type') == $type->name ? 'selected' : '' }}>{{ $type->name }}</option>
+                <option value="{{ $type->id }}" {{ request('animal_type_id') == $type->id ? 'selected' : '' }}>{{ $type->name }}</option>
                 @endforeach
             </select>
             <select id="healthFilter" class="form-select">
@@ -40,13 +42,13 @@
                 <option value="need_update" {{ request('vaccination_status') == 'need_update' ? 'selected' : '' }}>Perlu Update</option>
                 <option value="not_vaccinated" {{ request('vaccination_status') == 'not_vaccinated' ? 'selected' : '' }}>Belum Vaksin</option>
             </select>
-            <a href="{{ route('livestock.create') }}" class="btn btn-primary">
+            <a href="{{ route('livestocks.create') }}" class="btn btn-primary">
                 <i class="fas fa-plus me-2"></i>Tambah Hewan Ternak
             </a>
         </div>
     </div>
 
-    <!-- Statistik Hewan Ternak - STRUCTURE DIPERBAIKI -->
+    <!-- Statistik Hewan Ternak -->
     <div class="stats-container">
         <div class="stat-item">
             <span class="stat-number">{{ $totalLivestock }}</span>
@@ -92,59 +94,42 @@
                     @php
                         $animalType = $livestock->animalType;
                         $isPoultry = $animalType && $animalType->category === 'poultry';
+                        
+                        // Calculate age based on category
+                        $ageDisplay = '-';
+                        if ($isPoultry && $livestock->age_weeks) {
+                            $ageDisplay = $livestock->age_weeks . ' minggu';
+                        } elseif (!$isPoultry && $livestock->age_months) {
+                            $ageDisplay = $livestock->age_months . ' bulan';
+                        }
                     @endphp
                     <tr data-id="{{ $livestock->id }}" class="livestock-row {{ $livestock->health_status == 'sakit' ? 'table-danger' : '' }}">
                         <td>{{ $livestocks->firstItem() + $index }}</td>
                         <td>
-                            <div class="editable-cell" data-field="name" data-value="{{ $livestock->name }}">
-                                <span class="display-value">{{ $livestock->name ?: '-' }}</span>
-                                <input type="text" class="edit-input" value="{{ $livestock->name }}" style="display: none;">
-                            </div>
+                            {{ $livestock->name ?: '-' }}
                             @if($livestock->identification_number)
-                            <small class="text-muted">ID: {{ $livestock->identification_number }}</small>
+                            <small class="text-muted d-block">ID: {{ $livestock->identification_number }}</small>
                             @endif
                         </td>
                         <td>
                             @if($animalType)
-                                {{ $animalType->name }}
+                                <span class="animal-type-badge">{{ $animalType->name }}</span>
                             @else
                                 <span class="text-muted">-</span>
                             @endif
                         </td>
                         <td>
-                            <div class="editable-cell" data-field="sex" data-value="{{ $livestock->sex }}">
-                                <span class="display-value">
-                                    {{ $livestock->sex == 'jantan' ? 'Jantan' : 'Betina' }}
-                                </span>
-                                <select class="edit-input" style="display: none;">
-                                    <option value="jantan" {{ $livestock->sex == 'jantan' ? 'selected' : '' }}>Jantan</option>
-                                    <option value="betina" {{ $livestock->sex == 'betina' ? 'selected' : '' }}>Betina</option>
-                                </select>
-                            </div>
+                            {{ $livestock->sex == 'jantan' ? 'Jantan' : 'Betina' }}
                         </td>
                         <td>
-                            @if($isPoultry)
-                                <div class="editable-cell" data-field="age_weeks" data-value="{{ $livestock->age_weeks ?? '' }}">
-                                    <span class="display-value">
-                                        {{ $livestock->age_weeks ? $livestock->age_weeks . ' minggu' : '-' }}
-                                    </span>
-                                    <input type="number" class="edit-input" value="{{ $livestock->age_weeks }}" min="1" max="104" style="display: none;">
-                                </div>
-                            @else
-                                <div class="editable-cell" data-field="age_months" data-value="{{ $livestock->age_months ?? '' }}">
-                                    <span class="display-value">
-                                        {{ $livestock->age_months ? $livestock->age_months . ' bulan' : '-' }}
-                                    </span>
-                                    <input type="number" class="edit-input" value="{{ $livestock->age_months }}" min="1" max="240" style="display: none;">
-                                </div>
-                            @endif
+                            {{ $ageDisplay }}
                         </td>
                         <td>
                             <div class="editable-cell" data-field="weight_kg" data-value="{{ $livestock->weight_kg ?? '' }}">
                                 <span class="display-value">
                                     {{ $livestock->weight_kg ? number_format($livestock->weight_kg, 1) : '-' }}
                                 </span>
-                                <input type="number" step="0.01" class="edit-input" value="{{ $livestock->weight_kg }}" min="0.1" style="display: none;">
+                                <input type="number" step="0.01" class="edit-input" value="{{ $livestock->weight_kg }}" min="0.1" style="display: none;" placeholder="0.0">
                             </div>
                         </td>
                         <td>
@@ -189,7 +174,7 @@
                         <td>
                             <div class="editable-cell" data-field="feed_type" data-value="{{ $livestock->feed_type ?? '' }}">
                                 <span class="display-value">{{ $livestock->feed_type ?: '-' }}</span>
-                                <input type="text" class="edit-input" value="{{ $livestock->feed_type }}" style="display: none;">
+                                <input type="text" class="edit-input" value="{{ $livestock->feed_type }}" style="display: none;" placeholder="Jenis pakan">
                             </div>
                         </td>
                         <td>
@@ -197,13 +182,13 @@
                                 <span class="display-value">
                                     {{ $livestock->daily_feed_kg ? number_format($livestock->daily_feed_kg, 2) : '-' }}
                                 </span>
-                                <input type="number" step="0.01" class="edit-input" value="{{ $livestock->daily_feed_kg }}" min="0.01" style="display: none;">
+                                <input type="number" step="0.01" class="edit-input" value="{{ $livestock->daily_feed_kg }}" min="0.01" style="display: none;" placeholder="0.00">
                             </div>
                         </td>
                         <td>
                             <div class="editable-cell" data-field="housing_type" data-value="{{ $livestock->housing_type ?? '' }}">
                                 <span class="display-value">{{ $livestock->housing_type ?: '-' }}</span>
-                                <input type="text" class="edit-input" value="{{ $livestock->housing_type }}" style="display: none;">
+                                <input type="text" class="edit-input" value="{{ $livestock->housing_type }}" style="display: none;" placeholder="Tipe kandang">
                             </div>
                         </td>
                         <td>
@@ -211,21 +196,12 @@
                                 <span class="display-value">
                                     {{ $livestock->notes ? Str::limit($livestock->notes, 30) : '-' }}
                                 </span>
-                                <textarea class="edit-input" rows="2" style="display: none;">{{ $livestock->notes }}</textarea>
+                                <textarea class="edit-input" rows="2" style="display: none;" placeholder="Catatan tambahan">{{ $livestock->notes }}</textarea>
                             </div>
                         </td>
                         <td>
                             <div class="action-buttons">
-                                <button class="btn btn-warning edit-btn" title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn btn-success save-btn" title="Simpan" style="display: none;">
-                                    <i class="fas fa-save"></i>
-                                </button>
-                                <button class="btn btn-secondary cancel-btn" title="Batal" style="display: none;">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                                <button class="btn btn-danger delete-btn" data-id="{{ $livestock->id }}" title="Hapus">
+                                <button class="btn btn-danger btn-sm delete-btn" data-id="{{ $livestock->id }}" title="Hapus">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </div>
@@ -280,6 +256,8 @@
     padding: 20px;
     background-color: #f8fafc;
     min-height: 100vh;
+    max-width: 1400px;
+    margin: 0 auto;
 }
 
 /* Flash Messages Modern */
@@ -308,20 +286,16 @@
     padding: 0.75rem;
 }
 
-/* Header dengan Filter Modern - DIPERBAIKI */
-
+/* Header dengan Filter Modern */
 .content-header {
     background: white;
     padding: 1.5rem;
     border-radius: 8px;
-    margin: 0 auto 30px auto; /* Pusatkan dengan margin auto */
+    margin-bottom: 30px;
     border: 1px solid #e5e7eb;
     display: flex;
     justify-content: center;
-    align-items: center;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    max-width: 1400px;
-    width: calc(100% - 40px); /* Beri spacing 20px di kiri-kanan */
 }
 
 .filter-section {
@@ -386,9 +360,6 @@
     border-radius: 8px;
     margin-bottom: 1.5rem;
     border: 1px solid #e5e7eb;
-    margin-left: auto;
-    margin-right: auto;
-    max-width: 1400px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
@@ -432,16 +403,13 @@
     overflow: hidden;
     border: 1px solid #e5e7eb;
     margin-bottom: 2rem;
-    margin-left: auto;
-    margin-right: auto;
-    max-width: 1400px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    width: 95%;
 }
 
 .table-responsive {
     max-height: 70vh;
     overflow-y: auto;
+    overflow-x: auto;
     border-radius: 8px;
 }
 
@@ -501,7 +469,7 @@
 .livestock-table td:nth-child(10) { min-width: 120px; max-width: 150px; }
 .livestock-table td:nth-child(11) { min-width: 120px; max-width: 150px; }
 .livestock-table td:nth-child(12) { min-width: 150px; max-width: 200px; }
-.livestock-table td:nth-child(13) { min-width: 120px; max-width: 140px; }
+.livestock-table td:nth-child(13) { min-width: 140px; max-width: 160px; }
 
 .livestock-table tbody tr {
     transition: all 0.2s ease;
@@ -532,6 +500,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-direction: column;
 }
 
 .display-value {
@@ -546,7 +515,7 @@
 .edit-input {
     width: 100%;
     font-size: 0.85rem;
-    padding: 0.75rem;
+    padding: 0.5rem;
     border: 1px solid #d1d5db;
     border-radius: 4px;
     background: white;
@@ -559,6 +528,18 @@
     border-color: var(--primary-color);
     box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.1);
     outline: none;
+}
+
+/* Animal Type Badge */
+.animal-type-badge {
+    background: #e0f2fe;
+    color: #0369a1;
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 /* Badges Modern */
@@ -687,9 +668,6 @@
     padding: 1.5rem;
     border-radius: 8px;
     border: 1px solid #e5e7eb;
-    margin-left: auto;
-    margin-right: auto;
-    max-width: 1400px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
@@ -744,6 +722,98 @@
     border-left: 2px solid var(--primary-color);
 }
 
+/* Message Box System */
+.message-box {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    min-width: 300px;
+    max-width: 400px;
+    border-radius: 8px;
+    padding: 1rem 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    animation: slideIn 0.3s ease;
+    border-left: 4px solid;
+}
+
+.message-box.success {
+    background: #f0fdf4;
+    border-left-color: #10b981;
+    color: #065f46;
+}
+
+.message-box.error {
+    background: #fef2f2;
+    border-left-color: #ef4444;
+    color: #991b1b;
+}
+
+.message-box.info {
+    background: #eff6ff;
+    border-left-color: #3b82f6;
+    color: #1e40af;
+}
+
+.message-box.warning {
+    background: #fffbeb;
+    border-left-color: #f59e0b;
+    color: #92400e;
+}
+
+.message-box.hide {
+    animation: slideOut 0.3s ease;
+    opacity: 0;
+    transform: translateX(100%);
+}
+
+.message-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.message-text {
+    flex: 1;
+    font-weight: 500;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: inherit;
+    opacity: 0.7;
+    cursor: pointer;
+    padding: 0.25rem;
+    margin-left: 1rem;
+}
+
+.close-btn:hover {
+    opacity: 1;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideOut {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+}
+
 /* Responsive Design */
 @media (max-width: 1024px) {
     .stats-container {
@@ -751,7 +821,11 @@
     }
     
     .table-container {
-        max-width: 95%;
+        margin: 0 10px;
+    }
+    
+    .container-fluid {
+        padding: 15px;
     }
 }
 
@@ -774,12 +848,23 @@
         min-width: 150px;
     }
     
-    .table-container,
-    .stats-container,
-    .pagination-wrapper {
-        margin-left: auto;
-        margin-right: auto;
-        max-width: calc(100% - 20px);
+    .stats-container {
+        padding: 1.5rem;
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    
+    .action-buttons .btn {
+        width: 32px;
+        height: 32px;
+        font-size: 0.75rem;
     }
 }
 
@@ -788,29 +873,44 @@
         padding: 0.5rem;
     }
     
-    .content-header,
-    .table-container,
-    .stats-container,
-    .pagination-wrapper {
-        margin-left: 0;
-        margin-right: 0;
-        max-width: 100%;
-    }
-    
-    .stats-container {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-        padding: 1rem;
+    .content-header {
+        flex-direction: column;
+        gap: 0.75rem;
     }
     
     .filter-section {
         flex-direction: column;
-        align-items: stretch;
+        width: 100%;
     }
     
     .form-select {
         min-width: auto;
         width: 100%;
+    }
+    
+    .btn-primary {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .stats-container {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+        padding: 1rem;
+    }
+    
+    .stat-item {
+        padding: 1rem;
+    }
+    
+    .pagination-wrapper {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+    
+    .table-responsive {
+        max-height: 65vh;
     }
 }
 
@@ -863,6 +963,9 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize CSRF token for AJAX
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    
     // Filter functionality
     const typeFilter = document.getElementById('typeFilter');
     const healthFilter = document.getElementById('healthFilter');
@@ -871,8 +974,8 @@ document.addEventListener('DOMContentLoaded', function() {
     function applyFilters() {
         const params = new URLSearchParams(window.location.search);
 
-        if (typeFilter.value) params.set('type', typeFilter.value);
-        else params.delete('type');
+        if (typeFilter.value) params.set('animal_type_id', typeFilter.value);
+        else params.delete('animal_type_id');
 
         if (healthFilter.value) params.set('health_status', healthFilter.value);
         else params.delete('health_status');
@@ -888,47 +991,16 @@ document.addEventListener('DOMContentLoaded', function() {
     if (healthFilter) healthFilter.addEventListener('change', applyFilters);
     if (vaccinationFilter) vaccinationFilter.addEventListener('change', applyFilters);
 
-    // Simple editing functionality
-    const table = document.querySelector('.livestock-table');
-    
-    if (!table) return;
-
-    table.addEventListener('click', function(e) {
-        const target = e.target;
-        const button = target.closest('button');
-        
-        if (!button) return;
-
-        const row = button.closest('tr');
-        const livestockId = row.dataset.id;
-
-        if (button.classList.contains('edit-btn')) {
-            e.preventDefault();
-            enableEditMode(row);
-        }
-        else if (button.classList.contains('save-btn')) {
-            e.preventDefault();
-            saveChanges(row, livestockId);
-        }
-        else if (button.classList.contains('cancel-btn')) {
-            e.preventDefault();
-            disableEditMode(row);
-        }
-        else if (button.classList.contains('delete-btn')) {
-            e.preventDefault();
-            deleteLivestock(livestockId);
-        }
-    });
-
+    // Edit functionality
     function enableEditMode(row) {
-        // Disable all other edit modes first
+        // Exit edit mode for other rows
         document.querySelectorAll('.livestock-row.edit-mode').forEach(otherRow => {
             if (otherRow !== row) disableEditMode(otherRow);
         });
 
         row.classList.add('edit-mode');
         
-        // Show inputs, hide display values
+        // Store original values and show inputs
         row.querySelectorAll('.editable-cell').forEach(cell => {
             const display = cell.querySelector('.display-value');
             const input = cell.querySelector('.edit-input');
@@ -941,6 +1013,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Switch visibility
                 display.style.display = 'none';
                 input.style.display = 'block';
+                
+                // Adjust input width
+                if (input.tagName === 'INPUT' || input.tagName === 'SELECT') {
+                    input.style.width = '100%';
+                    input.style.padding = '0.25rem';
+                    input.style.minHeight = '2rem';
+                }
+                
+                if (input.tagName === 'TEXTAREA') {
+                    input.style.width = '100%';
+                    input.style.minHeight = '3rem';
+                }
+                
+                // Focus on first input
+                if (input.tagName === 'INPUT' && input.type !== 'hidden') {
+                    setTimeout(() => {
+                        input.focus();
+                        input.select();
+                    }, 10);
+                }
             }
         });
 
@@ -951,7 +1043,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function disableEditMode(row) {
         row.classList.remove('edit-mode');
         
-        // Show display values, hide inputs
+        // Restore original values and hide inputs
         row.querySelectorAll('.editable-cell').forEach(cell => {
             const display = cell.querySelector('.display-value');
             const input = cell.querySelector('.edit-input');
@@ -959,7 +1051,6 @@ document.addEventListener('DOMContentLoaded', function() {
             if (display && input && cell._originalDisplay !== undefined) {
                 // Restore original values
                 display.innerHTML = cell._originalDisplay;
-                input.value = cell._originalValue;
                 
                 // Switch visibility
                 display.style.display = 'block';
@@ -974,45 +1065,50 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateButtonVisibility(row) {
         const isEditMode = row.classList.contains('edit-mode');
         
-        // Toggle edit button
+        // Toggle buttons based on edit mode
         const editBtn = row.querySelector('.edit-btn');
-        if (editBtn) {
-            editBtn.style.display = isEditMode ? 'none' : 'inline-block';
-        }
-        
-        // Toggle save button
         const saveBtn = row.querySelector('.save-btn');
-        if (saveBtn) {
-            saveBtn.style.display = isEditMode ? 'inline-block' : 'none';
-        }
-        
-        // Toggle cancel button
         const cancelBtn = row.querySelector('.cancel-btn');
-        if (cancelBtn) {
-            cancelBtn.style.display = isEditMode ? 'inline-block' : 'none';
-        }
-        
-        // Toggle delete button
         const deleteBtn = row.querySelector('.delete-btn');
-        if (deleteBtn) {
-            deleteBtn.style.display = isEditMode ? 'none' : 'inline-block';
-        }
+        
+        if (editBtn) editBtn.style.display = isEditMode ? 'none' : 'inline-block';
+        if (saveBtn) saveBtn.style.display = isEditMode ? 'inline-block' : 'none';
+        if (cancelBtn) cancelBtn.style.display = isEditMode ? 'inline-block' : 'none';
+        if (deleteBtn) deleteBtn.style.display = isEditMode ? 'none' : 'inline-block';
     }
 
     function saveChanges(row, livestockId) {
         const formData = new FormData();
         formData.append('_method', 'PUT');
-        formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+        formData.append('_token', csrfToken);
 
         let hasChanges = false;
+        const changes = {};
 
+        // Collect all changed data
         row.querySelectorAll('.editable-cell').forEach(cell => {
             const field = cell.dataset.field;
             const input = cell.querySelector('.edit-input');
             
-            if (input && input.value !== cell._originalValue) {
-                formData.append(field, input.value);
-                hasChanges = true;
+            if (input) {
+                let value = input.value;
+                
+                // Handle empty values
+                if (value === '') {
+                    value = null;
+                }
+                
+                // Handle number inputs
+                if (input.type === 'number') {
+                    value = value ? parseFloat(value) : null;
+                }
+                
+                // Only add if value changed
+                if (JSON.stringify(value) !== JSON.stringify(cell._originalValue)) {
+                    formData.append(field, value);
+                    changes[field] = value;
+                    hasChanges = true;
+                }
             }
         });
 
@@ -1022,12 +1118,13 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Show loading
+        // Show loading state
         const saveBtn = row.querySelector('.save-btn');
         const originalHtml = saveBtn.innerHTML;
         saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
         saveBtn.disabled = true;
 
+        // Send AJAX request
         fetch(`/livestock/${livestockId}`, {
             method: 'POST',
             body: formData,
@@ -1036,13 +1133,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 'X-Requested-With': 'XMLHttpRequest'
             }
         })
-        .then(response => response.json())
+        .then(response => {
+            if (response.status === 403) {
+                throw new Error('Anda tidak memiliki izin untuk mengubah data ini');
+            }
+            if (!response.ok) {
+                return response.json().then(err => {
+                    throw new Error(err.message || `HTTP error! status: ${response.status}`);
+                });
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
                 // Update display with new values
-                updateRowDisplay(row);
+                updateRowDisplay(row, changes);
                 disableEditMode(row);
                 showMessage('Data berhasil diperbarui!', 'success');
+                
+                // Update stats
+                updateStats();
             } else {
                 throw new Error(data.message || 'Gagal menyimpan data');
             }
@@ -1050,6 +1160,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(error => {
             console.error('Save error:', error);
             showMessage('Error: ' + error.message, 'error');
+            disableEditMode(row);
         })
         .finally(() => {
             saveBtn.innerHTML = originalHtml;
@@ -1057,15 +1168,17 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    function updateRowDisplay(row) {
+    function updateRowDisplay(row, changes) {
         row.querySelectorAll('.editable-cell').forEach(cell => {
             const field = cell.dataset.field;
             const display = cell.querySelector('.display-value');
             const input = cell.querySelector('.edit-input');
-            const value = input ? input.value : '';
-
-            if (!display) return;
-
+            
+            if (!display || !input) return;
+            
+            const value = changes[field] !== undefined ? changes[field] : input.value;
+            
+            // Update display based on field type
             switch(field) {
                 case 'sex':
                     display.textContent = value === 'jantan' ? 'Jantan' : 'Betina';
@@ -1107,22 +1220,55 @@ document.addEventListener('DOMContentLoaded', function() {
                 case 'notes':
                     display.textContent = value ? (value.length > 30 ? value.substring(0, 30) + '...' : value) : '-';
                     break;
+                case 'feed_type':
+                case 'housing_type':
+                    display.textContent = value || '-';
+                    break;
                 default:
                     display.textContent = value || '-';
             }
-
+            
             // Update stored original values
             cell._originalDisplay = display.innerHTML;
             cell._originalValue = value;
+            input.value = value;
         });
     }
 
+    function updateStats() {
+        fetch('/livestock/stats', {
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const stats = document.querySelectorAll('.stat-number');
+                if (stats.length >= 4) {
+                    stats[0].textContent = data.data.total;
+                    stats[1].textContent = data.data.healthy;
+                    stats[2].textContent = data.data.needVaccination;
+                    stats[3].textContent = data.data.sick;
+                }
+            }
+        })
+        .catch(error => console.error('Stats update error:', error));
+    }
+
     function deleteLivestock(livestockId) {
-        if (!confirm('Hapus data hewan ternak ini?')) return;
+        if (!confirm('Apakah Anda yakin ingin menghapus data hewan ternak ini?')) return;
 
         const formData = new FormData();
         formData.append('_method', 'DELETE');
-        formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+        formData.append('_token', csrfToken);
+
+        const row = document.querySelector(`tr[data-id="${livestockId}"]`);
+        if (row) {
+            row.style.opacity = '0.5';
+            row.style.transition = 'opacity 0.3s ease';
+        }
 
         fetch(`/livestock/${livestockId}`, {
             method: 'POST',
@@ -1135,24 +1281,30 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                document.querySelector(`tr[data-id="${livestockId}"]`)?.remove();
-                showMessage('Data berhasil dihapus!', 'success');
-                
-                // Reload if no data left
-                if (!document.querySelector('.livestock-table tbody tr')) {
-                    setTimeout(() => location.reload(), 1000);
+                if (row) {
+                    row.remove();
+                    showMessage('Data berhasil dihapus!', 'success');
+                    updateStats();
+                    
+                    // Check if table is empty
+                    if (!document.querySelector('.livestock-table tbody tr')) {
+                        setTimeout(() => location.reload(), 1000);
+                    }
                 }
             } else {
-                showMessage(data.message || 'Gagal menghapus', 'error');
+                throw new Error(data.message || 'Gagal menghapus data');
             }
         })
         .catch(error => {
             console.error('Delete error:', error);
-            showMessage('Error menghapus data', 'error');
+            showMessage('Error: ' + error.message, 'error');
+            if (row) {
+                row.style.opacity = '1';
+            }
         });
     }
 
-    // New Message Box System
+    // Message Box System
     function showMessage(message, type = 'info') {
         // Remove existing message boxes
         document.querySelectorAll('.message-box').forEach(box => {
@@ -1198,29 +1350,58 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Initialize - ensure all inputs are hidden and buttons are in correct state
+    // Event delegation for table actions
+    document.addEventListener('click', function(e) {
+        // Edit button
+        if (e.target.closest('.edit-btn')) {
+            e.preventDefault();
+            const row = e.target.closest('.livestock-row');
+            enableEditMode(row);
+        }
+        
+        // Save button
+        if (e.target.closest('.save-btn')) {
+            e.preventDefault();
+            const row = e.target.closest('.livestock-row');
+            const livestockId = row.dataset.id;
+            saveChanges(row, livestockId);
+        }
+        
+        // Cancel button
+        if (e.target.closest('.cancel-btn')) {
+            e.preventDefault();
+            const row = e.target.closest('.livestock-row');
+            disableEditMode(row);
+        }
+        
+        // Delete button
+        if (e.target.closest('.delete-btn')) {
+            e.preventDefault();
+            const livestockId = e.target.closest('.delete-btn').dataset.id;
+            deleteLivestock(livestockId);
+        }
+    });
+
+    // Initialize table on load
     function initializeTable() {
         document.querySelectorAll('.livestock-row').forEach(row => {
-            row.querySelectorAll('.edit-input').forEach(input => {
-                input.style.display = 'none';
-            });
-            row.querySelectorAll('.display-value').forEach(display => {
-                display.style.display = 'block';
+            // Store original values
+            row.querySelectorAll('.editable-cell').forEach(cell => {
+                const display = cell.querySelector('.display-value');
+                const input = cell.querySelector('.edit-input');
+                
+                if (display && input) {
+                    cell._originalDisplay = display.innerHTML;
+                    cell._originalValue = input.value;
+                }
             });
             
-            // Ensure buttons are in correct initial state
+            // Set initial button states
             updateButtonVisibility(row);
         });
     }
 
-    // Prevent accidental edits
-    document.addEventListener('dblclick', function(e) {
-        if (e.target.closest('.editable-cell') && !e.target.closest('button')) {
-            e.preventDefault();
-        }
-    });
-
-    // Initialize on load
+    // Initialize on page load
     initializeTable();
 });
 </script>

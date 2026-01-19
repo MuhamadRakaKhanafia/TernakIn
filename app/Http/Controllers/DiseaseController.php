@@ -10,46 +10,46 @@ use Illuminate\Support\Facades\DB;
 
 class DiseaseController extends Controller
 {
-    public function index(Request $request)
-    {
-        $query = Disease::with(['animalTypes', 'symptoms'])
-                        ->active()
-                        ->orderBy('name');
+ public function index(Request $request)
+{
+    $query = Disease::with(['animalTypes', 'symptoms'])
+                    ->active()
+                    ->orderBy('name');
 
-        // Filter by animal_type
-        if ($request->has('animal_type_id') && $request->animal_type_id) {
-            $query->whereHas('animalTypes', function ($q) use ($request) {
-                $q->where('animal_type_id', $request->animal_type_id);
-            });
-        }
-
-        // Filter by causative agent
-        if ($request->has('causative_agent') && $request->causative_agent) {
-            $query->where('causative_agent', $request->causative_agent);
-        }
-
-        // Filter by search term
-        if ($request->has('search') && $request->search) {
-            $query->where(function ($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->search . '%')
-                  ->orWhere('disease_code', 'like', '%' . $request->search . '%')
-                  ->orWhere('other_names', 'like', '%' . $request->search . '%');
-            });
-        }
-
-        $diseases = $query->paginate(12);
-        $animalTypes = AnimalType::where('is_active', true)->get();
-        $causativeAgents = [
-            'virus' => 'Virus',
-            'bakteri' => 'Bakteri',
-            'parasit' => 'Parasit',
-            'fungi' => 'Fungi',
-            'defisiensi_nutrisi' => 'Defisiensi Nutrisi',
-            'lainnya' => 'Lainnya'
-        ];
-
-        return view('diseases.index', compact('diseases', 'animalTypes', 'causativeAgents'));
+    // Filter by animal_type
+    if ($request->has('animal_type_id') && $request->animal_type_id) {
+        $query->whereHas('animalTypes', function ($q) use ($request) {
+            $q->where('animal_types.id', $request->animal_type_id);
+        });
     }
+
+    // Filter by causative agent
+    if ($request->has('causative_agent') && $request->causative_agent) {
+        $query->where('causative_agent', $request->causative_agent);
+    }
+
+    // Filter by search term
+    if ($request->has('search') && $request->search) {
+        $query->where(function ($q) use ($request) {
+            $q->where('name', 'like', '%' . $request->search . '%')
+              ->orWhere('disease_code', 'like', '%' . $request->search . '%')
+              ->orWhere('other_names', 'like', '%' . $request->search . '%');
+        });
+    }
+
+    $diseases = $query->paginate(12);
+    $animalTypes = AnimalType::where('is_active', true)->get();
+    $causativeAgents = [
+        'virus' => 'Virus',
+        'bakteri' => 'Bakteri',
+        'parasit' => 'Parasit',
+        'fungi' => 'Fungi',
+        'defisiensi_nutrisi' => 'Defisiensi Nutrisi',
+        'lainnya' => 'Lainnya'
+    ];
+
+    return view('diseases.index', compact('diseases', 'animalTypes', 'causativeAgents'));
+}
 
     public function show($id)
     {

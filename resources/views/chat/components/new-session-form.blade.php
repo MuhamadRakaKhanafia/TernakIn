@@ -9,15 +9,13 @@
             @csrf
             <div class="form-group">
                 <label for="animalType">Jenis Ternak *</label>
-                <select name="animal_type" id="animalType" class="form-control" required>
+                <select name="animal_type_id" id="animalType" class="form-control" required>
                     <option value="">Pilih Jenis Ternak</option>
-                    <option value="sapi">Sapi</option>
-                    <option value="kambing">Kambing</option>
-                    <option value="domba">Domba</option>
-                    <option value="ayam">Ayam</option>
-                    <option value="bebek">Bebek</option>
-                    <option value="kelinci">Kelinci</option>
-                    <option value="lainnya">Lainnya</option>
+                    @foreach($animalTypes as $type)
+                        <option value="{{ $type->id }}">
+                            {{ $type->name }} ({{ $type->category ?? 'Umum' }})
+                        </option>
+                    @endforeach
                 </select>
             </div>
             

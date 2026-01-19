@@ -22,8 +22,11 @@ class Disease extends Model
         'transmission_method',
         'diagnosis_method',
         'general_treatment',
+        'prevention_method',
+        'risk_factors',
         'emergency_actions',
-        'is_active'
+        'is_active',
+        'image'
     ];
 
     protected $casts = [

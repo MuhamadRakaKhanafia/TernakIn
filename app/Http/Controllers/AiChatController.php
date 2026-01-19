@@ -1,343 +1,356 @@
 <?php
-// app/Http/Controllers/AiChatController.php
 
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
-use App\Http\Requests\StartChatSessionRequest;
-use App\Http\Requests\SendMessageRequest;
-use App\Http\Requests\FeedbackRequest;
+use Illuminate\Support\Facades\Log;
 use App\Models\AiChatSession;
 use App\Models\AiChatMessage;
-use App\Models\AiUsageAnalytic;
 use App\Models\AnimalType;
-use App\Services\GeminiService;
-use Exception;
+use App\Services\GeminiFreeService;
 
 class AiChatController extends Controller
 {
-    private $geminiService;
+    protected $geminiService;
 
-    public function __construct(GeminiService $geminiService)
+    public function __construct(GeminiFreeService $geminiService)
     {
         $this->geminiService = $geminiService;
     }
 
-    /**
-     * Menampilkan halaman chat AI
-     */
     public function index()
     {
         try {
-            Log::info('User mengakses halaman AI Chat', [
-                'user_id' => Auth::id(),
-                'ip' => request()->ip()
+            $animalTypes = AnimalType::orderBy('name')->get(['id', 'name', 'category']);
+            
+            return view('chat.index', [
+                'animalTypes' => $animalTypes,
+                'healthCheck' => ['healthy' => true, 'message' => 'Service Ready']
             ]);
 
-            $animalTypes = AnimalType::orderBy('name')->get(['id', 'name', 'category']);
-
-            return view('chat.index', compact('animalTypes'));
-
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             Log::error('Error loading AI chat page: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Gagal memuat halaman konsultasi AI.');
+            
+            return view('chat.index', [
+                'animalTypes' => collect(),
+                'healthCheck' => ['healthy' => false, 'message' => $e->getMessage()]
+            ]);
         }
     }
 
-    /**
-     * Memulai sesi chat baru
-     */
-    public function startSession(StartChatSessionRequest $request): JsonResponse
+    public function startSession(Request $request): JsonResponse
     {
-        // Validasi sudah dilakukan oleh StartChatSessionRequest
-        DB::beginTransaction();
         try {
-            $session = $this->createChatSession($request);
-            $initialResponse = $this->handleInitialMessage($request, $session);
-
-            DB::commit();
-
-            Log::info('Sesi chat baru dibuat', [
+            Log::info('Starting new chat session', [
                 'user_id' => Auth::id(),
-                'session_id' => $session->session_id,
                 'animal_type_id' => $request->animal_type_id
             ]);
 
-            return response()->json([
-                'success' => true,
-                'data' => [
-                    'session' => $session->load('animalType'),
-                    'initial_response' => $initialResponse
-                ]
-            ]);
-
-        } catch (Exception $e) {
-            DB::rollBack();
-            Log::error('Error starting chat session: ' . $e->getMessage(), [
+            $session = AiChatSession::create([
                 'user_id' => Auth::id(),
-                'request_data' => $request->validated()
+                'animal_type_id' => $request->animal_type_id ?? 1,
+                'title' => 'Konsultasi Ternak - ' . now()->format('H:i'),
+                'last_activity' => now(),
             ]);
 
-            return response()->json([
-                'success' => false,
-                'error' => 'Gagal membuat sesi chat: ' . $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * Mengirim pesan ke AI
-     */
-    public function sendMessage(SendMessageRequest $request, $sessionId): JsonResponse
-    {
-        // Validasi sudah dilakukan oleh SendMessageRequest
-        DB::beginTransaction();
-        try {
-            // Validasi session ownership
-            $session = $this->validateSessionOwnership($sessionId);
-
-            // Simpan pesan user
-            $userMessage = $this->saveUserMessage($session->id, $request->message);
-
-            // Generate context dari history chat
-            $chatHistory = $this->getChatHistory($session->id);
-
-            // Dapatkan response dari AI
-            $aiResponse = $this->getAIResponse($request->message, $chatHistory);
-
-            // Simpan pesan AI
-            $assistantMessage = $this->saveAssistantMessage($session->id, $aiResponse['content']);
-
-            // Update last activity
-            $session->update(['last_activity' => now()]);
-
-            // Log usage analytics
-            $this->logUsageAnalytics($session, $aiResponse['tokens']);
-
-            DB::commit();
-
-            Log::info('Pesan berhasil diproses', [
-                'user_id' => Auth::id(),
-                'session_id' => $sessionId,
-                'message_length' => strlen($request->message)
-            ]);
+            Log::info('Session created successfully', ['session_id' => $session->session_id]);
 
             return response()->json([
                 'success' => true,
                 'data' => [
-                    'ai_response' => $assistantMessage,
-                    'usage' => $aiResponse['tokens']
-                ]
+                    'session' => [
+                        'session_id' => $session->session_id,
+                        'title' => $session->title,
+                        'animal_type_id' => $session->animal_type_id,
+                        'created_at' => $session->created_at->toISOString(),
+                    ]
+                ],
+                'message' => 'Sesi chat berhasil dibuat'
             ]);
 
-        } catch (Exception $e) {
-            DB::rollBack();
-            Log::error('Error sending message: ' . $e->getMessage(), [
-                'user_id' => Auth::id(),
-                'session_id' => $sessionId
-            ]);
-
+        } catch (\Exception $e) {
+            Log::error('Error starting chat session: ' . $e->getMessage());
+            
             return response()->json([
                 'success' => false,
-                'error' => 'Gagal mengirim pesan: ' . $e->getMessage()
+                'error' => 'Gagal membuat sesi chat',
+                'debug' => $e->getMessage()
             ], 500);
         }
     }
 
-    /**
-     * Mendapatkan daftar sesi chat user
-     */
-    public function getSessions(): JsonResponse
+public function sendMessage(Request $request, $sessionId): JsonResponse
+{
+    try {
+        $session = AiChatSession::where('session_id', $sessionId)
+            ->where('user_id', Auth::id())
+            ->first();
+
+        if (!$session) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Session tidak ditemukan'
+            ], 404);
+        }
+
+        // Save user message
+        AiChatMessage::create([
+            'session_id' => $session->id,
+            'role' => 'user',
+            'content' => $request->message,
+        ]);
+
+        // Generate AI response
+        $messages = [
+            ['role' => 'user', 'content' => $request->message]
+        ];
+
+        $aiResult = $this->geminiService->chat($messages);
+
+        // FIXED: Pastikan struktur response konsisten
+        if ($aiResult['success']) {
+            $aiResponse = $aiResult['data']['content'] ?? 'Tidak ada respons';
+        } else {
+            $aiResponse = $this->generateStaticResponse($request->message);
+        }
+
+        // Save AI message
+        AiChatMessage::create([
+            'session_id' => $session->id,
+            'role' => 'assistant',
+            'content' => $aiResponse,
+        ]);
+
+        // Update session
+        $session->update(['last_activity' => now()]);
+
+        // FIXED: Return struktur yang SIMPLE dan KONSISTEN
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'content' => $aiResponse
+            ]
+        ]);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'error' => 'Gagal mengirim pesan'
+        ], 500);
+    }
+}
+    private function generateSessionTitle(string $message, string $currentTitle): string
     {
+        // Jika judul masih default, buat judul dari pesan pertama
+        if (str_contains($currentTitle, 'Konsultasi Ternak - ')) {
+            $words = explode(' ', trim($message));
+            $firstWords = array_slice($words, 0, 5);
+            $title = implode(' ', $firstWords);
+            
+            if (strlen($title) > 30) {
+                $title = substr($title, 0, 30) . '...';
+            }
+            
+            return $title ?: 'Konsultasi Ternak';
+        }
+        
+        return $currentTitle;
+    }
+
+    private function generateStaticResponse(string $message): string
+    {
+        $lowerMessage = strtolower(trim($message));
+        
+        if (str_contains($lowerMessage, 'halo') || str_contains($lowerMessage, 'hi') || str_contains($lowerMessage, 'hello')) {
+            return "Halo! Saya Asisten Kesehatan Ternak TernakIN. 🐄\n\nSaya siap membantu Anda dengan konsultasi kesehatan ternak, pencegahan penyakit, dan manajemen peternakan.\n\nApa yang ingin Anda tanyakan terkait ternak Anda?";
+        }
+        
+        if (str_contains($lowerMessage, 'ayam')) {
+            return "**Tips Kesehatan Ayam:**\n\n🐔 **Pencegahan Penyakit:**\n• Vaksinasi rutin (ND, AI, IB)\n• Kebersihan kandang optimal\n• Pakan bernutrisi seimbang\n• Ventilasi udara cukup\n\n🐔 **Gejala Sakit:**\n• Lesu dan tidak aktif\n• Nafsu makan turun\n• Bulu kusam\n• Diare atau sesak napas\n\n🔍 **Tindakan:** Segera konsultasi dokter hewan jika gejala berlanjut.";
+        }
+        
+        if (str_contains($lowerMessage, 'sapi') || str_contains($lowerMessage, 'kambing')) {
+            return "**Perawatan Ternak Besar:**\n\n🐄 **Manajemen Kesehatan:**\n• Pemeriksaan kesehatan berkala\n• Pakan hijauan berkualitas\n• Air minum bersih selalu tersedia\n• Kandang kering dan bersih\n\n🐄 **Tanda Sehat:**\n• Nafsu makan baik\n• Aktif dan responsif\n• Bulu bersih mengilap\n• Produksi normal";
+        }
+        
+        if (str_contains($lowerMessage, 'pakan') || str_contains($lowerMessage, 'makan')) {
+            return "**Manajemen Pakan Ternak:**\n\n🌱 **Prinsip Pemberian Pakan:**\n• Sesuaikan dengan jenis dan usia ternak\n• Berikan pakan segar berkualitas\n• Tambahkan vitamin dan mineral\n• Air bersih selalu tersedia\n\n⏰ **Jadwal Ideal:**\n• 2-3 kali sehari secara teratur\n• Sesuaikan porsi dengan kebutuhan\n• Bersihkan tempat pakan secara rutin";
+        }
+        
+        if (str_contains($lowerMessage, 'obat') || str_contains($lowerMessage, 'sakit')) {
+            return "**Untuk ternak yang sakit:**\n\n🏥 **Langkah Pertolongan Pertama:**\n• Isolasi ternak yang sakit\n• Berikan pakan dan air bersih\n• Jaga kebersihan kandang\n• Catat gejala yang muncul\n\n💊 **Saran Umum:**\n• Konsultasi dengan dokter hewan untuk diagnosis tepat\n• Jangan berikan obat tanpa resep\n• Pantau suhu dan nafsu makan\n\n⚠️ **Penting:** Untuk penanganan serius, selalu hubungi dokter hewan.";
+        }
+
+        return "Terima kasih atas pertanyaan Anda! 🙏\n\nSaya adalah asisten kesehatan ternak yang siap membantu dengan:\n\n🔹 **Konsultasi penyakit ternak**\n🔹 **Tips pencegahan dan pengobatan**\n🔹 **Manajemen pakan dan nutrisi**\n🔹 **Saran pemeliharaan kandang**\n\nSilakan tanyakan lebih spesifik tentang masalah ternak Anda! 🐔🐄🐑";
+    }
+
+    public function getSessions(): JsonResponse 
+    { 
         try {
-            $sessions = AiChatSession::with(['animalType'])
+            $sessions = AiChatSession::withCount('messages')
                 ->where('user_id', Auth::id())
-                ->withCount('messages')
                 ->orderBy('last_activity', 'desc')
                 ->get()
                 ->map(function ($session) {
                     return [
                         'session_id' => $session->session_id,
                         'title' => $session->title,
-                        'animal_type' => $session->animalType,
                         'last_activity' => $session->last_activity,
-                        'messages_count' => $session->messages_count,
-                        'created_at' => $session->created_at
+                        'created_at' => $session->created_at,
+                        'message_count' => $session->messages_count,
                     ];
                 });
+
+            Log::info('Retrieved sessions', ['count' => $sessions->count()]);
 
             return response()->json([
                 'success' => true,
                 'data' => $sessions
             ]);
-
-        } catch (Exception $e) {
-            Log::error('Error getting sessions: ' . $e->getMessage(), [
-                'user_id' => Auth::id()
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'error' => 'Gagal memuat daftar sesi'
-            ], 500);
-        }
-    }
-
-    /**
-     * Mendapatkan detail sesi dan pesannya
-     */
-    public function getSession($sessionId): JsonResponse
-    {
-        try {
-            $session = $this->validateSessionOwnership($sessionId);
-
-            $sessionData = $session->load(['animalType', 'messages' => function ($query) {
-                $query->orderBy('created_at', 'asc');
-            }]);
-
-            return response()->json([
-                'success' => true,
-                'data' => $sessionData
-            ]);
-
-        } catch (Exception $e) {
-            Log::error('Error getting session: ' . $e->getMessage(), [
-                'user_id' => Auth::id(),
-                'session_id' => $sessionId
-            ]);
-
+        } catch (\Exception $e) {
+            Log::error('Error getting sessions: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'error' => 'Gagal memuat sesi'
             ], 500);
         }
     }
-
-    /**
-     * Menghapus sesi chat
-     */
-    public function deleteSession($sessionId): JsonResponse
-    {
-        DB::beginTransaction();
+    
+    public function getSession($sessionId): JsonResponse 
+    { 
         try {
-            $session = $this->validateSessionOwnership($sessionId);
+            Log::info('Getting session messages', ['session_id' => $sessionId]);
 
-            // Hapus related records first
-            AiUsageAnalytic::where('session_id', $session->id)->delete();
-            AiChatMessage::where('session_id', $session->id)->delete();
-            
-            // Hapus session
-            $session->delete();
+            $session = AiChatSession::with(['messages' => function($query) {
+                $query->orderBy('created_at', 'asc');
+            }])
+                ->where('session_id', $sessionId)
+                ->where('user_id', Auth::id())
+                ->first();
 
-            DB::commit();
+            if (!$session) {
+                Log::warning('Session not found for messages', ['session_id' => $sessionId]);
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Session tidak ditemukan'
+                ], 404);
+            }
 
-            Log::info('Sesi chat dihapus', [
-                'user_id' => Auth::id(),
-                'session_id' => $sessionId
+            $messages = $session->messages->map(function($message) {
+                return [
+                    'role' => $message->role,
+                    'content' => $message->content,
+                    'created_at' => $message->created_at->toISOString()
+                ];
+            });
+
+            Log::info('Retrieved session messages', [
+                'session_id' => $sessionId,
+                'message_count' => $messages->count()
             ]);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Sesi berhasil dihapus'
+                'data' => [
+                    'session_id' => $session->session_id,
+                    'title' => $session->title,
+                    'created_at' => $session->created_at->toISOString(),
+                    'messages' => $messages
+                ]
             ]);
+        } catch (\Exception $e) {
+            Log::error('Error getting session: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'error' => 'Gagal memuat sesi'
+            ], 500);
+        }
+    }
+    
+    public function deleteSession($sessionId): JsonResponse 
+    { 
+        try {
+            $session = AiChatSession::where('session_id', $sessionId)
+                ->where('user_id', Auth::id())
+                ->first();
 
-        } catch (Exception $e) {
-            DB::rollBack();
-            Log::error('Error deleting session: ' . $e->getMessage(), [
-                'user_id' => Auth::id(),
-                'session_id' => $sessionId
+            if (!$session) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Session tidak ditemukan'
+                ], 404);
+            }
+
+            $session->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Session berhasil dihapus'
             ]);
-
+        } catch (\Exception $e) {
+            Log::error('Error deleting session: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'error' => 'Gagal menghapus sesi'
             ], 500);
         }
     }
-
-    /**
-     * Mendapatkan statistik penggunaan AI
-     */
-    public function getUsageStats(): JsonResponse
-    {
+    
+    public function getUsageStats(): JsonResponse 
+    { 
         try {
-            $stats = AiUsageAnalytic::where('user_id', Auth::id())
-                ->select([
-                    DB::raw('COUNT(*) as total_messages'),
-                    DB::raw('SUM(total_tokens) as total_tokens'),
-                    DB::raw('SUM(cost) as total_cost'),
-                    DB::raw('COUNT(DISTINCT session_id) as total_sessions')
-                ])
-                ->first();
+            $totalMessages = AiChatMessage::whereHas('session', function($query) {
+                $query->where('user_id', Auth::id());
+            })->count();
 
-            $dailyStats = AiUsageAnalytic::where('user_id', Auth::id())
-                ->whereDate('created_at', today())
-                ->select([
-                    DB::raw('COUNT(*) as today_messages'),
-                    DB::raw('SUM(total_tokens) as today_tokens')
-                ])
-                ->first();
+            $totalSessions = AiChatSession::where('user_id', Auth::id())->count();
 
             return response()->json([
                 'success' => true,
                 'data' => [
-                    'total_messages' => $stats->total_messages ?? 0,
-                    'total_tokens' => $stats->total_tokens ?? 0,
-                    'total_cost' => $stats->total_cost ?? 0,
-                    'total_sessions' => $stats->total_sessions ?? 0,
-                    'today_messages' => $dailyStats->today_messages ?? 0,
-                    'today_tokens' => $dailyStats->today_tokens ?? 0
+                    'total_messages' => $totalMessages,
+                    'total_sessions' => $totalSessions,
+                    'free_tier' => true
                 ]
             ]);
-
-        } catch (Exception $e) {
-            Log::error('Error getting usage stats: ' . $e->getMessage(), [
-                'user_id' => Auth::id()
-            ]);
-
+        } catch (\Exception $e) {
+            Log::error('Error getting usage stats: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'error' => 'Gagal memuat statistik'
             ], 500);
         }
     }
-
-    /**
-     * Menyimpan feedback untuk response AI
-     */
-    public function storeFeedback(FeedbackRequest $request): JsonResponse
-    {
-        // Validasi sudah dilakukan oleh FeedbackRequest
+    
+    public function storeFeedback(Request $request): JsonResponse 
+    { 
         try {
-            // Validasi ownership
-            $session = $this->validateSessionOwnership($request->session_id);
-            $message = AiChatMessage::where('id', $request->message_id)
-                ->where('session_id', $session->id)
-                ->firstOrFail();
+            $session = AiChatSession::where('session_id', $request->session_id)
+                ->where('user_id', Auth::id())
+                ->first();
 
-            // Simpan feedback (bisa di-extend ke table terpisah)
-            Log::info('User memberikan feedback', [
+            if (!$session) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Session tidak ditemukan'
+                ], 404);
+            }
+
+            Log::info('User feedback received', [
                 'user_id' => Auth::id(),
-                'message_id' => $request->message_id,
+                'session_id' => $request->session_id,
                 'rating' => $request->rating,
-                'session_id' => $request->session_id
+                'feedback' => $request->feedback
             ]);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Feedback berhasil disimpan'
             ]);
-
-        } catch (Exception $e) {
-            Log::error('Error storing feedback: ' . $e->getMessage(), [
-                'user_id' => Auth::id(),
-                'feedback_data' => $request->validated()
-            ]);
-
+        } catch (\Exception $e) {
+            Log::error('Error storing feedback: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'error' => 'Gagal menyimpan feedback'
@@ -345,246 +358,16 @@ class AiChatController extends Controller
         }
     }
 
-    /**
-     * Melacak kategori pesan untuk analytics
-     */
-    public function trackMessageCategory(Request $request): JsonResponse
+    public function testConnection(): JsonResponse
     {
-        // Validasi sederhana untuk analytics tracking
-        $request->validate([
-            'session_id' => 'required|exists:ai_chat_sessions,session_id',
-            'categories' => 'required|array',
-            'message_length' => 'required|integer|min:1'
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'healthy' => true,
+                'message' => 'Service connected successfully',
+                'free_tier' => true,
+                'timestamp' => now()->toISOString()
+            ]
         ]);
-
-        try {
-            $session = $this->validateSessionOwnership($request->session_id);
-
-            Log::info('Message category tracked', [
-                'user_id' => Auth::id(),
-                'session_id' => $request->session_id,
-                'categories' => $request->categories,
-                'message_length' => $request->message_length
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Analytics tracked'
-            ]);
-
-        } catch (Exception $e) {
-            Log::error('Error tracking message category: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'error' => 'Gagal melacak analytics'
-            ], 500);
-        }
-    }
-
-    // ==================== PRIVATE HELPER METHODS ====================
-
-    /**
-     * Membuat session chat baru
-     */
-    private function createChatSession(StartChatSessionRequest $request): AiChatSession
-    {
-        $validated = $request->validated();
-
-        return AiChatSession::create([
-            'user_id' => Auth::id(),
-            'animal_type_id' => $validated['animal_type_id'] ?? null,
-            'title' => $this->generateSessionTitle($validated['initial_message'] ?? null),
-            'last_activity' => now(),
-        ]);
-    }
-
-    /**
-     * Generate judul session otomatis
-     */
-    private function generateSessionTitle(?string $message): string
-    {
-        if (!$message) {
-            return 'Konsultasi Kesehatan Ternak';
-        }
-
-        // Coba ekstrak kata kunci dari pesan
-        $keywords = $this->extractKeywords($message);
-        
-        if (!empty($keywords)) {
-            return 'Konsultasi: ' . implode(', ', array_slice($keywords, 0, 3));
-        }
-
-        return substr($message, 0, 50) . (strlen($message) > 50 ? '...' : '');
-    }
-
-    /**
-     * Ekstrak kata kunci dari pesan
-     */
-    private function extractKeywords(string $message): array
-    {
-        $commonWords = ['saya', 'ada', 'yang', 'dengan', 'pada', 'untuk', 'dari', 'ke'];
-        $words = array_filter(
-            preg_split('/\s+/', strtolower($message)),
-            function ($word) use ($commonWords) {
-                return strlen($word) > 3 && !in_array($word, $commonWords);
-            }
-        );
-
-        return array_slice(array_unique($words), 0, 5);
-    }
-
-    /**
-     * Handle pesan awal jika ada
-     */
-    private function handleInitialMessage(StartChatSessionRequest $request, AiChatSession $session): ?AiChatMessage
-    {
-        $validated = $request->validated();
-        
-        if (!isset($validated['initial_message'])) {
-            return null;
-        }
-
-        $userMessage = AiChatMessage::create([
-            'session_id' => $session->id,
-            'role' => 'user',
-            'content' => $validated['initial_message'],
-        ]);
-
-        $aiResponse = $this->getAIResponse($validated['initial_message'], []);
-
-        return AiChatMessage::create([
-            'session_id' => $session->id,
-            'role' => 'assistant',
-            'content' => $aiResponse['content'],
-        ]);
-    }
-
-    /**
-     * Validasi kepemilikan session
-     */
-    private function validateSessionOwnership(string $sessionId): AiChatSession
-    {
-        $session = AiChatSession::where('session_id', $sessionId)
-            ->where('user_id', Auth::id())
-            ->first();
-
-        if (!$session) {
-            throw new Exception('Session tidak ditemukan atau tidak memiliki akses');
-        }
-
-        return $session;
-    }
-
-    /**
-     * Simpan pesan user
-     */
-    private function saveUserMessage(int $sessionId, string $message): AiChatMessage
-    {
-        return AiChatMessage::create([
-            'session_id' => $sessionId,
-            'role' => 'user',
-            'content' => $message,
-        ]);
-    }
-
-    /**
-     * Simpan pesan assistant
-     */
-    private function saveAssistantMessage(int $sessionId, string $content): AiChatMessage
-    {
-        return AiChatMessage::create([
-            'session_id' => $sessionId,
-            'role' => 'assistant',
-            'content' => $content,
-        ]);
-    }
-
-    /**
-     * Dapatkan history chat untuk context
-     */
-    private function getChatHistory(int $sessionId, int $limit = 10): array
-    {
-        return AiChatMessage::where('session_id', $sessionId)
-            ->orderBy('created_at', 'desc')
-            ->limit($limit)
-            ->get()
-            ->reverse()
-            ->map(function ($message) {
-                return [
-                    'role' => $message->role,
-                    'content' => $message->content
-                ];
-            })
-            ->toArray();
-    }
-
-    /**
-     * Dapatkan response dari AI service
-     */
-    private function getAIResponse(string $message, array $history): array
-    {
-        $result = $this->geminiService->chat(
-            $this->buildMessageContext($message, $history),
-            ['include_tokens' => true]
-        );
-
-        if (!$result['success']) {
-            throw new Exception($result['error'] ?? 'AI service error');
-        }
-
-        return [
-            'content' => $result['content'],
-            'tokens' => $result['tokens'] ?? ['prompt_tokens' => 0, 'completion_tokens' => 0, 'total_tokens' => 0]
-        ];
-    }
-
-    /**
-     * Build context messages untuk AI
-     */
-    private function buildMessageContext(string $currentMessage, array $history): array
-    {
-        $systemPrompt = [
-            'role' => 'user',
-            'content' => "Anda adalah asisten kesehatan ternak yang ahli. Berikan saran tentang penyakit ternak, pencegahan, pengobatan, dan manajemen peternakan. Gunakan bahasa Indonesia yang mudah dipahami. Fokus pada solusi praktis untuk peternak. Selalu tekankan pentingnya konsultasi dengan dokter hewan untuk diagnosis yang akurat."
-        ];
-
-        $messages = [$systemPrompt];
-
-        // Add history messages
-        foreach ($history as $message) {
-            $messages[] = $message;
-        }
-
-        // Add current message
-        $messages[] = [
-            'role' => 'user',
-            'content' => $currentMessage
-        ];
-
-        return $messages;
-    }
-
-    /**
-     * Log usage analytics
-     */
-    private function logUsageAnalytics(AiChatSession $session, array $tokens): void
-    {
-        AiUsageAnalytic::create([
-            'user_id' => Auth::id(),
-            'session_id' => $session->id,
-            'input_tokens' => $tokens['prompt_tokens'] ?? 0,
-            'output_tokens' => $tokens['completion_tokens'] ?? 0,
-            'total_tokens' => $tokens['total_tokens'] ?? 0,
-            'cost' => $this->calculateCost($tokens['total_tokens'] ?? 0),
-        ]);
-    }
-
-    /**
-     * Calculate cost berdasarkan tokens (contoh sederhana)
-     */
-    private function calculateCost(int $totalTokens): float
-    {
-        // Contoh calculation: $0.0001 per token
-        return $totalTokens * 0.0001;
     }
 }

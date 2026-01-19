@@ -1,16 +1,23 @@
+import ApiService from './ApiService.js';
+import EventManager from './EventManager.js';
+import SessionManager from './SessionManager.js';
+import MessageHandler from './MessageHandler.js';
+import UIManager from './UIManager.js';
+import AnalyticsTracker from './AnalyticsTracker.js';
+
 class ChatSystem {
     constructor() {
         this.currentSessionId = null;
         this.isFirstMessage = true;
         this.isLoading = false;
-        
+
         this.apiService = new ApiService();
         this.eventManager = new EventManager();
         this.sessionManager = new SessionManager(this);
         this.messageHandler = new MessageHandler(this);
         this.uiManager = new UIManager(this);
         this.analyticsTracker = new AnalyticsTracker(this);
-        
+
         this.init();
     }
 
@@ -19,7 +26,7 @@ class ChatSystem {
             await this.loadDependencies();
             this.setupEventListeners();
             await this.loadInitialData();
-            this.uiManager.showWelcomeScreen();
+            this.uiManager.showChatInterface();
         } catch (error) {
             console.error('Failed to initialize chat system:', error);
             this.uiManager.showError('Gagal memuat sistem chat');
@@ -57,3 +64,5 @@ class ChatSystem {
         this.eventManager.emit('session:load', sessionId);
     }
 }
+
+export default ChatSystem;

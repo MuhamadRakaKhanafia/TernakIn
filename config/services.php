@@ -36,8 +36,8 @@ return [
     ],
 
     'google' => [
-        'gemini' => [
-            'api_key' => env('GOOGLE_GEMINI_API_KEY'),
+        'GeminiFreeService' => [
+            'api_key' => env('GEMINI_FREE_API_KEY'),
             'url' => 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent',
         ],
         'client_id' => env('GOOGLE_CLIENT_ID'),

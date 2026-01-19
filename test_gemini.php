@@ -1,23 +1,36 @@
 <?php
 
-require_once 'vendor/autoload.php';
+require_once __DIR__ . '/vendor/autoload.php';
 
 use Illuminate\Foundation\Application;
 use Illuminate\Contracts\Console\Kernel;
-use App\Services\GeminiService;
 
-$app = require_once 'bootstrap/app.php';
-$app->make(Kernel::class)->bootstrap();
+// Bootstrap Laravel
+$app = require_once __DIR__ . '/bootstrap/app.php';
+$kernel = $app->make(Kernel::class);
+$kernel->bootstrap();
 
-echo "Testing Gemini Service (without tokens)\n";
+use App\Services\GeminiFreeService;
 
-$service = app(GeminiService::class);
-$result = $service->chat([['role' => 'user', 'content' => 'Halo, apa kabar?']], ['max_tokens' => 50]);
+echo "Testing GeminiFreeService...\n";
 
-print_r($result);
+try {
+    $service = new GeminiFreeService();
 
-echo "\nTesting Gemini Service (with tokens)\n";
+    echo "Service created successfully\n";
 
-$resultWithTokens = $service->chat([['role' => 'user', 'content' => 'Halo, apa kabar?']], ['max_tokens' => 50, 'include_tokens' => true]);
+    $result = $service->chat([
+        ['role' => 'user', 'content' => 'Apa gejala ayam yang sakit?']
+    ], ['max_tokens' => 200]);
 
-print_r($resultWithTokens);
+    echo "Success: " . ($result['success'] ? 'true' : 'false') . "\n";
+    echo "Error: " . ($result['error'] ?? 'none') . "\n";
+    echo "Content length: " . strlen($result['content'] ?? '') . "\n";
+
+    if ($result['content']) {
+        echo "Content preview: " . substr($result['content'], 0, 100) . "...\n";
+    }
+
+} catch (Exception $e) {
+    echo "Exception: " . $e->getMessage() . "\n";
+}

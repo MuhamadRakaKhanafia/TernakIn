@@ -6,42 +6,39 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    public function up(): void
+    public function up()
     {
-        // Cek jika kolom belum ada, lalu tambahkan
-        if (!Schema::hasColumn('diseases', 'disease_code')) {
+        // Add missing columns to diseases table
+        if (Schema::hasTable('diseases')) {
             Schema::table('diseases', function (Blueprint $table) {
-                $table->string('disease_code')->unique()->after('id');
-            });
-        }
+                if (!Schema::hasColumn('diseases', 'prevention_method')) {
+                    $table->text('prevention_method')->nullable()->after('general_treatment');
+                }
+                
+                // Add other missing columns if needed
+                if (!Schema::hasColumn('diseases', 'risk_factors')) {
+                    $table->text('risk_factors')->nullable()->after('prevention_method');
+                }
+                
+                if (!Schema::hasColumn('diseases', 'is_zoonotic')) {
+                    $table->boolean('is_zoonotic')->default(false)->after('risk_factors');
+                }
+                
+                if (!Schema::hasColumn('diseases', 'is_active')) {
+                    $table->boolean('is_active')->default(true)->after('is_zoonotic');
+                }
 
-        if (!Schema::hasColumn('diseases', 'causative_agent')) {
-            Schema::table('diseases', function (Blueprint $table) {
-                $table->string('causative_agent')->after('disease_code');
-            });
-        }
-
-        if (!Schema::hasColumn('diseases', 'transmission_method')) {
-            Schema::table('diseases', function (Blueprint $table) {
-                $table->text('transmission_method')->after('is_zoonotic');
-            });
-        }
-
-        if (!Schema::hasColumn('diseases', 'general_treatment')) {
-            Schema::table('diseases', function (Blueprint $table) {
-                $table->text('general_treatment')->after('transmission_method');
-            });
-        }
-
-        if (!Schema::hasColumn('diseases', 'is_active')) {
-            Schema::table('diseases', function (Blueprint $table) {
-                $table->boolean('is_active')->default(true)->after('general_treatment');
+                if (!Schema::hasColumn('diseases', 'image')) {
+                    $table->string('image')->nullable()->after('is_active');
+                }
             });
         }
     }
 
-    public function down(): void
+    public function down()
     {
-        
+        Schema::table('diseases', function (Blueprint $table) {
+            $table->dropColumn(['prevention_method', 'risk_factors', 'is_zoonotic', 'is_active', 'image']);
+        });
     }
 };

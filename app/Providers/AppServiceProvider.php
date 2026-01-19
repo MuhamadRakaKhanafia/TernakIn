@@ -10,12 +10,12 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Register any application services.
      */
-    public function register(): void
-    {
-        $this->app->singleton(OpenAIService::class, function ($app) {
-            return new OpenAIService();
-        });
-    }
+    public function register()
+{
+    $this->app->bind(\App\Services\GeminiFreeService::class, function ($app) {
+        return new \App\Services\GeminiFreeService();
+    });
+}
 
     /**
      * Bootstrap any application services.

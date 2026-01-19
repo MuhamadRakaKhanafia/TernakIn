@@ -2,30 +2,71 @@
 
 namespace Database\Seeders;
 
-use App\Models\AnimalType;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class AnimalTypeSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
-    public function run(): void
+    public function run()
     {
+        // Skip jika tabel tidak ada
+        if (!Schema::hasTable('animal_types')) {
+            return;
+        }
+
         $animalTypes = [
-            ['name' => 'Sapi', 'description' => 'Hewan ternak sapi'],
-            ['name' => 'Kambing', 'description' => 'Hewan ternak kambing'],
-            ['name' => 'Domba', 'description' => 'Hewan ternak domba'],
-            ['name' => 'Ayam', 'description' => 'Hewan ternak ayam'],
-            ['name' => 'Bebek', 'description' => 'Hewan ternak bebek'],
-            ['name' => 'Babi', 'description' => 'Hewan ternak babi'],
-            ['name' => 'Kelinci', 'description' => 'Hewan ternak kelinci'],
-            ['name' => 'Ikan', 'description' => 'Hewan ternak ikan'],
+            [
+                'name' => 'Ayam',
+                'description' => 'Unggas domestik untuk produksi telur dan daging',
+                'category' => 'poultry',
+            ],
+            [
+                'name' => 'Sapi',
+                'description' => 'Ternak besar untuk produksi daging dan susu',
+                'category' => 'large_animal',
+            ],
+            [
+                'name' => 'Kambing',
+                'description' => 'Ternak kecil untuk produksi daging dan susu',
+                'category' => 'large_animal',
+            ],
+            [
+                'name' => 'Domba',
+                'description' => 'Ternak kecil untuk produksi daging dan wol',
+                'category' => 'large_animal',
+            ],
+            [
+                'name' => 'Bebek',
+                'description' => 'Unggas air untuk produksi telur dan daging',
+                'category' => 'poultry',
+            ],
+            [
+                'name' => 'Kelinci',
+                'description' => 'Hewan ternak kecil untuk produksi daging',
+                'category' => 'other',
+            ],
         ];
 
-        foreach ($animalTypes as $animalType) {
-            AnimalType::create($animalType);
+        $inserted = 0;
+        $skipped = 0;
+
+        foreach ($animalTypes as $type) {
+            // Cek apakah sudah ada
+            $exists = DB::table('animal_types')
+                ->where('name', $type['name'])
+                ->exists();
+
+            if (!$exists) {
+                DB::table('animal_types')->insert(array_merge($type, [
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]));
+                $inserted++;
+            } else {
+                $skipped++;
+            }
         }
+
     }
 }

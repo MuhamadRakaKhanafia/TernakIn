@@ -18,7 +18,7 @@ class SessionManager {
                 this.chatSystem.currentSessionId = response.data.session.session_id;
                 this.chatSystem.uiManager.updateSessionInfo(response.data.session);
                 this.chatSystem.uiManager.showChatInterface();
-                
+
                 if (response.data.initial_response) {
                     this.chatSystem.messageHandler.addMessage(
                         'assistant',
@@ -41,9 +41,9 @@ class SessionManager {
     async loadSession(sessionId) {
         try {
             this.chatSystem.uiManager.showLoading('Memuat sesi...');
-            
+
             const response = await this.chatSystem.apiService.getSession(sessionId);
-            
+
             if (response.success) {
                 this.chatSystem.currentSessionId = sessionId;
                 this.chatSystem.uiManager.updateSessionInfo(response.data);
@@ -63,11 +63,11 @@ class SessionManager {
 
         try {
             await this.chatSystem.apiService.deleteSession(sessionId);
-            
+
             if (sessionId === this.chatSystem.currentSessionId) {
                 this.chatSystem.uiManager.showNewSessionForm();
             }
-            
+
             this.chatSystem.uiManager.showNotification('Sesi berhasil dihapus', 'success');
         } catch (error) {
             this.chatSystem.uiManager.showError('Gagal menghapus sesi: ' + error.message);
@@ -97,3 +97,5 @@ class SessionManager {
         ];
     }
 }
+
+export default SessionManager;

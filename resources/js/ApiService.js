@@ -1,7 +1,7 @@
 // js/chat/core/ApiService.js
 class ApiService {
     constructor() {
-        this.baseUrl = '/api/chat';
+        this.baseUrl = '/chat';
         this.csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
     }
 
@@ -51,14 +51,14 @@ class ApiService {
 
     // Specific API methods
     async startSession(data) {
-        return this.request('/sessions/start', {
+        return this.request('/sessions', {
             method: 'POST',
             body: JSON.stringify(data)
         });
     }
 
     async sendMessage(sessionId, message) {
-        return this.request(`/sessions/${sessionId}/message`, {
+        return this.request(`/sessions/${sessionId}/messages`, {
             method: 'POST',
             body: JSON.stringify({ message })
         });
@@ -91,3 +91,5 @@ class ApiService {
         }
     }
 }
+
+export default ApiService;

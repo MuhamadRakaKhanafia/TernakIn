@@ -7,7 +7,7 @@ use App\Http\Controllers\AnimalTypeController;
 use App\Http\Controllers\DiseaseController;
 use App\Http\Controllers\SymptomController;
 use App\Http\Controllers\PreventionController;
-use App\Http\Controllers\MedicineController;
+use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\AiChatController;
 use App\Http\Controllers\ProvinceController;
@@ -66,16 +66,26 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/preventions/disease/{diseaseId}', [PreventionController::class, 'getByDisease']);
     Route::get('/preventions/tips', [PreventionController::class, 'getPreventionTips']);
 
-    // Medicines
-    Route::get('/medicines', [MedicineController::class, 'index']);
-    Route::get('/medicines/{id}', [MedicineController::class, 'show']);
-    Route::get('/medicines/disease/{diseaseId}', [MedicineController::class, 'getMedicinesByDisease']);
+    // Analytics
+    Route::get('/analytics', [AnalyticsController::class, 'index']);
 
-    // Articles
+    //articles
     Route::get('/articles', [ArticleController::class, 'index']);
     Route::get('/articles/{slug}', [ArticleController::class, 'show']);
     Route::get('/articles/popular', [ArticleController::class, 'popularArticles']);
     Route::get('/articles/recent', [ArticleController::class, 'recentArticles']);
+
+    // AI Chat routes
+    Route::prefix('chat')->group(function () {
+        Route::post('/sessions/start', [AiChatController::class, 'startSession']);
+        Route::get('/sessions', [AiChatController::class, 'getSessions']);
+        Route::get('/sessions/{sessionId}', [AiChatController::class, 'getSession']);
+        Route::delete('/sessions/{sessionId}', [AiChatController::class, 'deleteSession']);
+        Route::post('/sessions/{sessionId}/message', [AiChatController::class, 'sendMessage']);
+        Route::get('/usage-stats', [AiChatController::class, 'getUsageStats']);
+        Route::post('/feedback', [AiChatController::class, 'storeFeedback']);
+        Route::get('/health', [AiChatController::class, 'testConnection']);
+    });
 });
 
 

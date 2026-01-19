@@ -1,4 +1,4 @@
-<div id="messageInput" class="message-input" style="display: none;">
+<div id="messageInput" class="message-input">
     <form id="sendMessageForm" class="message-form">
         @csrf
         <input type="hidden" name="session_id" id="currentSessionId">
@@ -16,9 +16,6 @@
         <div class="input-actions">
             <button type="button" class="btn btn-sm btn-outline-secondary" id="attachFileBtn">
                 <i class="fas fa-paperclip"></i> Lampirkan File
-            </button>
-            <button type="button" class="btn btn-sm btn-outline-info" id="suggestQuestionsBtn">
-                <i class="fas fa-lightbulb"></i> Pertanyaan Contoh
             </button>
         </div>
     </form>

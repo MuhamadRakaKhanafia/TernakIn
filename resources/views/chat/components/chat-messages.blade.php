@@ -1,4 +1,4 @@
-<div id="chatMessages" class="chat-messages" style="display: none;">
+<div id="chatMessages" class="chat-messages">
     <div class="messages-container" id="messagesContainer">
         <!-- Messages will be loaded here dynamically -->
     </div>

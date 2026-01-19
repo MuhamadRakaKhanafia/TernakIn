@@ -12,8 +12,5 @@
         <button id="sessionsBtn" class="btn btn-outline-primary">
             <i class="fas fa-list"></i> Sesi Chat
         </button>
-        <button id="statsBtn" class="btn btn-outline-secondary">
-            <i class="fas fa-chart-bar"></i> Statistik
-        </button>
     </div>
 </div>

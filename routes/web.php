@@ -7,14 +7,15 @@ use App\Http\Controllers\AnimalTypeController;
 use App\Http\Controllers\DiseaseController;
 use App\Http\Controllers\SymptomController;
 use App\Http\Controllers\PreventionController;
-use App\Http\Controllers\MedicineController;
+use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\AiChatController;
+use App\Http\Controllers\LivestockController;
+use App\Http\Controllers\WelcomeController;
 
 // Public routes
-Route::get('/', function () {
-    return view('welcome');
-})->name('home');
+Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
+Route::get('/welcome', [WelcomeController::class, 'index'])->name('welcome.index');
 
 // Auth Routes
 Route::get('/register', [AuthController::class, 'showRegistrationForm'])->name('register');
@@ -31,34 +32,52 @@ Route::get('/api/cities/{province_id}', [AuthController::class, 'getCities'])->n
 // Social Auth Routes
 Route::get('/auth/google', [SocialAuthController::class, 'redirectToGoogle'])->name('auth.google');
 Route::get('/auth/google/callback', [SocialAuthController::class, 'handleGoogleCallback']);
-Route::get('/auth/facebook', [SocialAuthController::class, 'redirectToFacebook'])->name('auth.facebook');
-Route::get('/auth/facebook/callback', [SocialAuthController::class, 'handleFacebookCallback']);
 
 // Web Routes for Public Views (no auth required)
 Route::get('/web/diseases', [DiseaseController::class, 'webIndex'])->name('diseases.public.index');
 Route::get('/web/diseases/{id}', [DiseaseController::class, 'webShow'])->name('diseases.public.show');
 Route::get('/web/symptoms', [SymptomController::class, 'webIndex'])->name('symptoms.public.index');
-Route::get('/web/medicines', [MedicineController::class, 'webIndex'])->name('medicines.public.index');
-Route::get('/web/medicines/{id}', [MedicineController::class, 'webShow'])->name('medicines.public.show');
 Route::get('/web/articles', [ArticleController::class, 'webIndex'])->name('articles.public.index');
 Route::get('/web/articles/{slug}', [ArticleController::class, 'webShow'])->name('articles.public.show');
 Route::get('/web/animal-types', [AnimalTypeController::class, 'webIndex'])->name('animal-types.public.index');
 Route::get('/web/preventions', [PreventionController::class, 'webIndex'])->name('preventions.public.index');
 
-// Protected routes - Web Session Based
+// Protected routes
 Route::middleware(['auth'])->group(function () {
     // Auth routes
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('/profile', [AuthController::class, 'profile'])->name('profile');
     Route::put('/profile', [AuthController::class, 'updateProfile'])->name('profile.update');
 
-    // Dashboard
-    Route::get('/dashboard', function () {
-        return view('index');
-    })->name('dashboard');
+    Route::get('/welcome', function () {
+        return view('welcome');
+    })->name('welcome.index');
 
-    // AI Chat Route
-    Route::get('/chat', [AiChatController::class, 'index'])->name('chat.index');
+    // Dashboard
+    Route::get('/dashboard', [LivestockController::class, 'index'])->name('dashboard');
+    Route::post('/livestock', [LivestockController::class, 'store'])->name('livestock.store');
+
+    // ==================== AI CHAT ROUTES ====================
+    Route::prefix('chat')->name('chat.')->group(function () {
+        // Main Chat Page
+        Route::get('/', [AiChatController::class, 'index'])->name('index');
+        
+        // Session Management
+        Route::post('/sessions/start', [AiChatController::class, 'startSession'])->name('sessions.start');
+        Route::get('/sessions', [AiChatController::class, 'getSessions'])->name('sessions.list');
+        Route::get('/sessions/{sessionId}', [AiChatController::class, 'getSession'])->name('sessions.get');
+        Route::delete('/sessions/{sessionId}', [AiChatController::class, 'deleteSession'])->name('sessions.delete');
+        
+        // Message Handling
+        Route::post('/sessions/{sessionId}/send', [AiChatController::class, 'sendMessage'])->name('messages.send');
+        
+        // Analytics & Stats
+        Route::get('/usage-stats', [AiChatController::class, 'getUsageStats'])->name('usage.stats');
+        Route::post('/feedback', [AiChatController::class, 'storeFeedback'])->name('feedback.store');
+        
+        // Connection Test
+        Route::get('/test-connection', [AiChatController::class, 'testConnection'])->name('test.connection');
+    });
 
     // Animal Types
     Route::get('/animal-types', [AnimalTypeController::class, 'index'])->name('animal-types.index');
@@ -69,7 +88,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Diseases
     Route::get('/diseases', [DiseaseController::class, 'index'])->name('diseases.index');
-    Route::get('/diseases/{id}', [DiseaseController::class, 'show'])->name('diseases.show');
+    Route::get('/diseases/{disease}', [DiseaseController::class, 'show'])->name('diseases.show');
     Route::post('/diseases/quick-diagnosis', [DiseaseController::class, 'quickDiagnosis'])->name('diseases.quick-diagnosis');
     Route::get('/diseases/search', [DiseaseController::class, 'searchDiseases'])->name('diseases.search');
 
@@ -82,34 +101,32 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/preventions/disease/{diseaseId}', [PreventionController::class, 'getByDisease'])->name('preventions.by-disease');
     Route::get('/preventions/tips', [PreventionController::class, 'getPreventionTips'])->name('preventions.tips');
 
-    // Medicines
-    Route::get('/medicines', [MedicineController::class, 'index'])->name('medicines.index');
-    Route::get('/medicines/{id}', [MedicineController::class, 'show'])->name('medicines.show');
-    Route::get('/medicines/disease/{diseaseId}', [MedicineController::class, 'getMedicinesByDisease'])->name('medicines.by-disease');
-
+    // Anallytics
+    Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
+    Route::get('/analytics/{id}', [AnalyticsController::class, 'show'])->name('analytics.show');
     // Articles
     Route::get('/articles', [ArticleController::class, 'index'])->name('articles.index');
     Route::get('/articles/{slug}', [ArticleController::class, 'show'])->name('articles.show');
     Route::get('/articles/popular', [ArticleController::class, 'popularArticles'])->name('articles.popular');
     Route::get('/articles/recent', [ArticleController::class, 'recentArticles'])->name('articles.recent');
+
+    // Livestock
+    Route::get('/livestock', [LivestockController::class, 'index'])->name('livestock.index');
+    Route::get('/livestock/create', [LivestockController::class, 'create'])->name('livestock.create');
+    Route::post('/livestock', [LivestockController::class, 'store'])->name('livestock.store');
+    Route::get('/livestock/{livestock}', [LivestockController::class, 'show'])->name('livestock.show');
+    Route::get('/livestock/{livestock}/edit', [LivestockController::class, 'edit'])->name('livestock.edit');
+    Route::put('/livestock/{livestock}', [LivestockController::class, 'update'])->name('livestock.update');
+    Route::delete('/livestock/{livestock}', [LivestockController::class, 'destroy'])->name('livestock.destroy');
 });
 
-// API Routes untuk AI Chat (Sanctum protected)
-Route::middleware(['auth:sanctum'])->prefix('api/chat')->group(function () {
-    // Session Management
-    Route::post('/sessions/start', [AiChatController::class, 'startSession']);
-    Route::get('/sessions', [AiChatController::class, 'getSessions']);
-    Route::get('/sessions/{sessionId}', [AiChatController::class, 'getSession']);
-    Route::delete('/sessions/{sessionId}', [AiChatController::class, 'deleteSession']);
-    
-    // Message Handling
-    Route::post('/sessions/{sessionId}/message', [AiChatController::class, 'sendMessage']);
-    
-    // Analytics & Feedback
-    Route::get('/usage-stats', [AiChatController::class, 'getUsageStats']);
-    Route::post('/feedback', [AiChatController::class, 'storeFeedback']);
-    Route::post('/analytics/message-category', [AiChatController::class, 'trackMessageCategory']);
+// API Routes
+Route::middleware(['auth'])->prefix('api')->group(function () {
+    // Animal Types untuk dropdown
+    Route::get('/animal-types', [AnimalTypeController::class, 'apiIndex'])->name('api.animal-types');
 });
 
-// API untuk Animal Types (untuk dropdown di AI Chat)
-Route::middleware(['auth:sanctum'])->get('/api/animal-types', [AnimalTypeController::class, 'apiIndex']);
+// Fallback route
+Route::fallback(function () {
+    return response()->view('errors.404', [], 404);
+});

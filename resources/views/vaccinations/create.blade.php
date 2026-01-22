@@ -52,11 +52,11 @@
         <form action="{{ route('vaccinations.store') }}" method="POST" class="vaccination-form">
             @csrf
 
+            <!-- Row 1: Animal Type and Vaccine Name -->
             <div class="row">
-                <!-- Livestock Selection -->
                 <div class="col-md-6 mb-3">
-                    <label for="livestock_id" class="form-label">
-                        <i class="fas fa-cow me-1"></i>Hewan Ternak <span class="text-danger">*</span>
+                    <label for="animal_type_id" class="form-label">
+                        <i class="fas fa-cow me-1"></i>Jenis Hewan Ternak <span class="text-danger">*</span>
                     </label>
                     <select name="animal_type_id" id="animal_type_id" class="form-select @error('animal_type_id') is-invalid @enderror" required>
                         <option value="">Pilih Jenis Hewan</option>
@@ -66,12 +66,11 @@
                         </option>
                         @endforeach
                     </select>
-                    @error('livestock_id')
+                    @error('animal_type_id')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                 </div>
 
-                <!-- Vaccine Name -->
                 <div class="col-md-6 mb-3">
                     <label for="vaccine_name" class="form-label">
                         <i class="fas fa-syringe me-1"></i>Nama Vaksin <span class="text-danger">*</span>
@@ -84,8 +83,8 @@
                 </div>
             </div>
 
+            <!-- Row 2: Vaccination Date and Next Vaccination Date -->
             <div class="row">
-                <!-- Vaccination Date -->
                 <div class="col-md-6 mb-3">
                     <label for="vaccination_date" class="form-label">
                         <i class="fas fa-calendar-alt me-1"></i>Tanggal Vaksinasi <span class="text-danger">*</span>
@@ -97,7 +96,6 @@
                     @enderror
                 </div>
 
-                <!-- Next Vaccination Date -->
                 <div class="col-md-6 mb-3">
                     <label for="next_vaccination_date" class="form-label">
                         <i class="fas fa-calendar-plus me-1"></i>Tanggal Vaksinasi Selanjutnya
@@ -110,26 +108,32 @@
                 </div>
             </div>
 
-            <!-- Notes -->
-            <div class="mb-3">
-                <label for="notes" class="form-label">
-                    <i class="fas fa-sticky-note me-1"></i>Catatan Tambahan
-                </label>
-                <textarea name="notes" id="notes" class="form-control @error('notes') is-invalid @enderror" rows="4"
-                          placeholder="Tambahkan catatan tentang vaksinasi ini (opsional)">{{ old('notes') }}</textarea>
-                @error('notes')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
+            <!-- Row 3: Notes (Full Width) -->
+            <div class="row">
+                <div class="col-12 mb-3">
+                    <label for="notes" class="form-label">
+                        <i class="fas fa-sticky-note me-1"></i>Catatan Tambahan
+                    </label>
+                    <textarea name="notes" id="notes" class="form-control @error('notes') is-invalid @enderror" rows="4"
+                              placeholder="Tambahkan catatan tentang vaksinasi ini (opsional)">{{ old('notes') }}</textarea>
+                    @error('notes')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
             </div>
 
             <!-- Form Actions -->
-            <div class="form-actions">
-                <a href="{{ route('vaccinations.index') }}" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left me-1"></i>Kembali
-                </a>
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save me-1"></i>Simpan Vaksinasi
-                </button>
+            <div class="form-actions-container">
+                <div class="form-actions">
+                    <a href="{{ route('vaccinations.index') }}" class="btn btn-secondary action-btn">
+                        <i class="fas fa-arrow-left me-2"></i>
+                        <span>Kembali</span>
+                    </a>
+                    <button type="submit" class="btn btn-primary action-btn">
+                        <i class="fas fa-save me-2"></i>
+                        <span>Simpan Vaksinasi</span>
+                    </button>
+                </div>
             </div>
         </form>
     </div>
@@ -274,32 +278,62 @@
 .form-label {
     font-weight: 600;
     color: var(--text-color);
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
     display: block;
+    font-size: 0.95rem;
 }
 
 .form-control, .form-select {
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    padding: 0.75rem 1rem;
-    font-size: 0.9rem;
-    transition: all 0.2s ease;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 0.875rem 1rem;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
     background: white;
+    height: auto;
+    line-height: 1.5;
 }
 
 .form-control:focus, .form-select:focus {
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+    box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.1);
     outline: none;
+    transform: translateY(-1px);
 }
 
 .form-control::placeholder {
     color: #9ca3af;
+    font-size: 0.9rem;
 }
 
 textarea.form-control {
     resize: vertical;
-    min-height: 100px;
+    min-height: 120px;
+    line-height: 1.6;
+}
+
+/* Form Field Groups */
+.mb-3 {
+    margin-bottom: 1.5rem !important;
+}
+
+/* Row Spacing */
+.row {
+    margin-bottom: 0.5rem;
+}
+
+.row:last-child {
+    margin-bottom: 0;
+}
+
+/* Field Consistency */
+.form-select {
+    height: auto;
+    padding: 0.875rem 1rem;
+}
+
+input[type="date"] {
+    padding: 0.875rem 1rem;
 }
 
 /* Invalid States */
@@ -314,50 +348,95 @@ textarea.form-control {
     margin-top: 0.25rem;
 }
 
-/* Form Actions */
-.form-actions {
-    display: flex;
-    gap: 1rem;
-    justify-content: flex-end;
-    padding-top: 1.5rem;
-    border-top: 1px solid #e5e7eb;
-    margin-top: 2rem;
+/* Form Actions Container */
+.form-actions-container {
+    background: #f8fafc;
+    border-radius: 0 0 12px 12px;
+    padding: 2rem;
+    margin: 0 -2rem -2rem -2rem;
+    border-top: 2px solid #e5e7eb;
 }
 
-.btn {
-    border-radius: 6px;
-    padding: 0.75rem 1.5rem;
+.form-actions {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    align-items: center;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.action-btn {
+    border-radius: 10px;
+    padding: 1rem 2rem;
     font-weight: 600;
-    transition: all 0.2s ease;
-    border: none;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
     cursor: pointer;
     text-decoration: none;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 0.5rem;
+    min-width: 160px;
+    position: relative;
+    overflow: hidden;
 }
 
-.btn-primary {
-    background: var(--primary-color);
+.action-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.action-btn:hover::before {
+    left: 100%;
+}
+
+.btn-primary.action-btn {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    color: white;
+    box-shadow: 0 4px 15px rgba(5, 150, 105, 0.3);
+}
+
+.btn-primary.action-btn:hover {
+    background: linear-gradient(135deg, var(--primary-dark), var(--primary-color));
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(5, 150, 105, 0.4);
     color: white;
 }
 
-.btn-primary:hover {
-    background: var(--primary-dark);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(5, 150, 105, 0.2);
+.btn-secondary.action-btn {
+    background: linear-gradient(135deg, #6b7280, #4b5563);
+    color: white;
+    box-shadow: 0 4px 15px rgba(107, 114, 128, 0.3);
+}
+
+.btn-secondary.action-btn:hover {
+    background: linear-gradient(135deg, #4b5563, #374151);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(107, 114, 128, 0.4);
     color: white;
 }
 
-.btn-secondary {
-    background: #6b7280;
-    color: white;
+.action-btn i {
+    font-size: 1.1rem;
+    transition: transform 0.3s ease;
 }
 
-.btn-secondary:hover {
-    background: #4b5563;
-    transform: translateY(-1px);
-    color: white;
+.action-btn:hover i {
+    transform: scale(1.1);
+}
+
+.action-btn span {
+    font-weight: 600;
+    letter-spacing: 0.025em;
 }
 
 /* Responsive Design */

@@ -33,12 +33,11 @@ class Broadcast extends Model
     }
 
     /**
-     * Scope for ordering broadcasts by priority and creation date
+     * Scope for ordering broadcasts by creation date
      */
     public function scopeOrdered($query)
     {
-        return $query->orderBy('priority', 'desc')
-            ->orderBy('created_at', 'desc');
+        return $query->orderBy('created_at', 'desc');
     }
 
     /**

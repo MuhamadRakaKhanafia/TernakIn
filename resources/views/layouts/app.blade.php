@@ -15,7 +15,7 @@
 <body class="bg-gray-50 min-h-screen">
     @if(!in_array(Route::currentRouteName(), ['login', 'register']))
     <!-- Navbar -->
-    <nav class="bg-white shadow-lg sticky top-0 z-50">
+       <nav id="main-navbar" class="bg-white shadow-lg sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <!-- Logo atau Nama Aplikasi -->
@@ -363,7 +363,6 @@
         });
     </script>
 
-    <script src="{{ asset('js/script.js') }}"></script>
     @stack('scripts')
 
     <style>

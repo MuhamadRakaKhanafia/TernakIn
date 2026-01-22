@@ -1189,5 +1189,109 @@ document.addEventListener('DOMContentLoaded', function() {
     //     }, 1000);
     // }
 });
+
+// Modal for full message display
+const messageModalHTML = `
+<div class="modal fade" id="messageModal" tabindex="-1" aria-labelledby="messageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="messageModalLabel">
+                    <i class="fas fa-comment-dots me-2"></i>
+                    <span id="messageType">Message</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="message-content-container">
+                    <pre id="messageContent" class="message-full-content"></pre>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Tutup
+                </button>
+                <button type="button" class="btn btn-primary" onclick="copyToClipboard()">
+                    <i class="fas fa-copy me-2"></i>Salin Teks
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+`;
+
+// Append modal to body if it doesn't exist
+if (!document.getElementById('messageModal')) {
+    document.body.insertAdjacentHTML('beforeend', messageModalHTML);
+}
 </script>
+
+<style>
+/* Additional styles for the modal */
+.message-full-content {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    background: #f8fafc;
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.message-content-container {
+    margin-bottom: 1rem;
+}
+
+.modal-content {
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+    background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+    color: white;
+    border-bottom: none;
+    border-radius: 12px 12px 0 0;
+    padding: 1.5rem;
+}
+
+.modal-title {
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-footer {
+    border-top: 1px solid #e5e7eb;
+    padding: 1rem 1.5rem;
+}
+
+/* Scrollbar for modal content */
+.message-full-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.message-full-content::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+}
+
+.message-full-content::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+.message-full-content::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+</style>
 @endsection

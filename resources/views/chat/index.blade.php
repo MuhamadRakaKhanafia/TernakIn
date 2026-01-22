@@ -973,14 +973,12 @@ class ChatSystem {
             const responseData = await response.json();
             console.log('📦 Full API Response:', responseData);
 
-            this.showLoading(false);
-
             if (responseData && responseData.success) {
                 console.log('✅ API Response successful');
 
                 // Extract AI content - FIXED STRUCTURE
                 let aiContent = '';
-                
+
                 // Coba semua kemungkinan struktur response
                 if (responseData.data?.ai_response?.content) {
                     aiContent = responseData.data.ai_response.content;
@@ -1003,6 +1001,7 @@ class ChatSystem {
                 // Display AI message
                 console.log('🤖 Displaying AI message...');
                 this.displayMessage('assistant', aiContent);
+                this.showLoading(false);
 
             } else {
                 const errorMsg = responseData?.error || responseData?.message || 'Terjadi kesalahan';
@@ -1010,6 +1009,7 @@ class ChatSystem {
                 this.showError('AI Error: ' + errorMsg);
                 // Display the actual error message from API response
                 this.displayMessage('assistant', errorMsg);
+                this.showLoading(false);
             }
         } catch (error) {
             console.error('💥 Send message error:', error);

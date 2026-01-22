@@ -39,136 +39,116 @@
     </div>
 
     <!-- Quick Actions -->
-    <div class="content-header">
-        <div class="row">
-            <div class="col-12">
-                <h3 class="mb-4" style="font-size: 1.5rem; font-weight: 700; color: #1f2937;">Quick Actions</h3>
-                <div class="row g-4">
-                    <div class="col-md-6 col-lg-4">
-                        <a href="{{ route('admin.logged-in-users') }}" class="action-card">
-                            <div class="d-flex align-items-center">
-                                <div class="action-icon">
-                                    <i class="fas fa-user-check"></i>
-                                </div>
-                                <div class="ms-3">
-                                    <h5 class="mb-1">Logged-in Users</h5>
-                                    <p class="mb-0 text-muted">View currently active users</p>
-                                </div>
-                                <div class="ms-auto">
-                                    <i class="fas fa-arrow-right text-primary"></i>
-                                </div>
-                            </div>
-                        </a>
+    <div class="content-header quick-actions-section">
+        <div class="quick-actions-grid">
+            <a href="{{ route('admin.logged-in-users') }}" class="action-card">
+                <div class="d-flex align-items-center">
+                    <div class="action-icon">
+                        <i class="fas fa-user-check"></i>
                     </div>
-
-                    <div class="col-md-6 col-lg-4">
-                        <a href="{{ route('admin.form-submitters') }}" class="action-card">
-                            <div class="d-flex align-items-center">
-                                <div class="action-icon">
-                                    <i class="fas fa-file-signature"></i>
-                                </div>
-                                <div class="ms-3">
-                                    <h5 class="mb-1">Form Submitters</h5>
-                                    <p class="mb-0 text-muted">View all user form submissions</p>
-                                </div>
-                                <div class="ms-auto">
-                                    <i class="fas fa-arrow-right text-primary"></i>
-                                </div>
-                            </div>
-                        </a>
+                    <div class="ms-3">
+                        <h5 class="mb-1">Logged-in Users</h5>
+                        <p class="mb-0 text-muted">View currently active users</p>
                     </div>
-
-                    <div class="col-md-6 col-lg-4">
-                        <a href="{{ route('admin.chat-queries') }}" class="action-card">
-                            <div class="d-flex align-items-center">
-                                <div class="action-icon">
-                                    <i class="fas fa-search"></i>
-                                </div>
-                                <div class="ms-3">
-                                    <h5 class="mb-1">User Searches</h5>
-                                    <p class="mb-0 text-muted">Monitor AI chat queries</p>
-                                </div>
-                                <div class="ms-auto">
-                                    <i class="fas fa-arrow-right text-primary"></i>
-                                </div>
-                            </div>
-                        </a>
-                    </div>
-
-                    <div class="col-md-6 col-lg-4">
-                        <a href="{{ route('analytics.index') }}" class="action-card">
-                            <div class="d-flex align-items-center">
-                                <div class="action-icon">
-                                    <i class="fas fa-chart-bar"></i>
-                                </div>
-                                <div class="ms-3">
-                                    <h5 class="mb-1">Analytics</h5>
-                                    <p class="mb-0 text-muted">View system analytics</p>
-                                </div>
-                                <div class="ms-auto">
-                                    <i class="fas fa-arrow-right text-primary"></i>
-                                </div>
-                            </div>
-                        </a>
-                    </div>
-
-                    <div class="col-md-6 col-lg-4">
-                        <a href="{{ route('admin.diseases.index') }}" class="action-card">
-                            <div class="d-flex align-items-center">
-                                <div class="action-icon">
-                                    <i class="fas fa-viruses"></i>
-                                </div>
-                                <div class="ms-3">
-                                    <h5 class="mb-1">Disease Management</h5>
-                                    <p class="mb-0 text-muted">CRUD operations for diseases</p>
-                                </div>
-                                <div class="ms-auto">
-                                    <i class="fas fa-arrow-right text-primary"></i>
-                                </div>
-                            </div>
-                        </a>
-                    </div>
-
-                    <div class="col-md-6 col-lg-4">
-                        <a href="{{ route('admin.vaccinations.index') }}" class="action-card">
-                            <div class="d-flex align-items-center">
-                                <div class="action-icon">
-                                    <i class="fas fa-syringe"></i>
-                                </div>
-                                <div class="ms-3">
-                                    <h5 class="mb-1">Vaccination Management</h5>
-                                    <p class="mb-0 text-muted">Manage vaccination schedules and approvals</p>
-                                </div>
-                                <div class="ms-auto">
-                                    <i class="fas fa-arrow-right text-primary"></i>
-                                </div>
-                            </div>
-                        </a>
-                    </div>
-
-                    <div class="col-md-6 col-lg-4">
-                        <a href="{{ route('admin.broadcasts.index') }}" class="action-card">
-                            <div class="d-flex align-items-center">
-                                <div class="action-icon">
-                                    <i class="fas fa-bullhorn"></i>
-                                </div>
-                                <div class="ms-3">
-                                    <h5 class="mb-1">Broadcast Messages</h5>
-                                    <p class="mb-0 text-muted">Create and manage broadcast messages</p>
-                                </div>
-                                <div class="ms-auto">
-                                    <i class="fas fa-arrow-right text-primary"></i>
-                                </div>
-                            </div>
-                        </a>
+                    <div class="ms-auto">
+                        <i class="fas fa-arrow-right text-primary"></i>
                     </div>
                 </div>
-            </div>
+            </a>
+
+            <a href="{{ route('admin.form-submitters') }}" class="action-card">
+                <div class="d-flex align-items-center">
+                    <div class="action-icon">
+                        <i class="fas fa-file-signature"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h5 class="mb-1">Form Submitters</h5>
+                        <p class="mb-0 text-muted">View all user form submissions</p>
+                    </div>
+                    <div class="ms-auto">
+                        <i class="fas fa-arrow-right text-primary"></i>
+                    </div>
+                </div>
+            </a>
+
+            <a href="{{ route('admin.chat-queries') }}" class="action-card">
+                <div class="d-flex align-items-center">
+                    <div class="action-icon">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h5 class="mb-1">User Searches</h5>
+                        <p class="mb-0 text-muted">Monitor AI chat queries</p>
+                    </div>
+                    <div class="ms-auto">
+                        <i class="fas fa-arrow-right text-primary"></i>
+                    </div>
+                </div>
+            </a>
+
+            <a href="{{ route('analytics.index') }}" class="action-card">
+                <div class="d-flex align-items-center">
+                    <div class="action-icon">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h5 class="mb-1">Analytics</h5>
+                        <p class="mb-0 text-muted">View system analytics</p>
+                    </div>
+                    <div class="ms-auto">
+                        <i class="fas fa-arrow-right text-primary"></i>
+                    </div>
+                </div>
+            </a>
+
+            <a href="{{ route('admin.diseases.index') }}" class="action-card">
+                <div class="d-flex align-items-center">
+                    <div class="action-icon">
+                        <i class="fas fa-viruses"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h5 class="mb-1">Disease Management</h5>
+                        <p class="mb-0 text-muted">CRUD operations for diseases</p>
+                    </div>
+                    <div class="ms-auto">
+                        <i class="fas fa-arrow-right text-primary"></i>
+                    </div>
+                </div>
+            </a>
+
+            <a href="{{ route('admin.vaccinations.index') }}" class="action-card">
+                <div class="d-flex align-items-center">
+                    <div class="action-icon">
+                        <i class="fas fa-syringe"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h5 class="mb-1">Vaccination Management</h5>
+                        <p class="mb-0 text-muted">Manage vaccination schedules and approvals</p>
+                    </div>
+                    <div class="ms-auto">
+                        <i class="fas fa-arrow-right text-primary"></i>
+                    </div>
+                </div>
+            </a>
+
+            <a href="{{ route('admin.broadcasts.index') }}" class="action-card">
+                <div class="d-flex align-items-center">
+                    <div class="action-icon">
+                        <i class="fas fa-bullhorn"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h5 class="mb-1">Broadcast Messages</h5>
+                        <p class="mb-0 text-muted">Create and manage broadcast messages</p>
+                    </div>
+                    <div class="ms-auto">
+                        <i class="fas fa-arrow-right text-primary"></i>
+                    </div>
+                </div>
+            </a>
         </div>
-    </div>
-</div>
 
 <style>
+/* Header Styles */
 .content-header {
     background: white;
     padding: 2rem;
@@ -190,16 +170,17 @@
     font-size: 1rem;
 }
 
+/* Statistics Cards */
 .stats-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
     margin-bottom: 2rem;
 }
 
 .stat-item {
     background: white;
-    padding: 1.5rem;
+    padding: 1rem;
     border-radius: 16px;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     text-align: center;
@@ -213,7 +194,7 @@
 }
 
 .stat-number {
-    font-size: 2.5rem;
+    font-size: 2rem;
     font-weight: 800;
     color: #10b981;
     line-height: 1;
@@ -228,9 +209,37 @@
     letter-spacing: 0.5px;
 }
 
+/* Quick Actions Section Styles */
+.quick-actions-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 20px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    margin-bottom: 2rem;
+    border: 1px solid #e2e8f0;
+}
+
+.quick-actions-section h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+/* Quick Actions Grid */
+.quick-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    justify-items: center;
+    max-width: 900px;
+    margin: 0 auto 2rem;
+
+/* Action Cards */
 .action-card {
     background: white;
-    padding: 1.5rem;
+    padding: 0.75rem;
     border-radius: 16px;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     border: 1px solid #e2e8f0;
@@ -238,6 +247,10 @@
     color: inherit;
     transition: all 0.3s ease;
     display: block;
+    position: relative;
+    overflow: hidden;
+    min-height: 120px;
+    width: 100%;
 }
 
 .action-card:hover {
@@ -245,8 +258,25 @@
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
     text-decoration: none;
     color: inherit;
+    border-color: #667eea;
 }
 
+.action-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.1), transparent);
+    transition: left 0.5s;
+}
+
+.action-card:hover::before {
+    left: 100%;
+}
+
+/* Action Icon */
 .action-icon {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
@@ -257,43 +287,88 @@
     align-items: center;
     justify-content: center;
     font-size: 1.25rem;
+    flex-shrink: 0;
+    transition: transform 0.3s ease;
 }
 
+.action-card:hover .action-icon {
+    transform: scale(1.1);
+}
+
+/* Action Card Content */
 .action-card h5 {
     font-size: 1.1rem;
     font-weight: 600;
     color: #1f2937;
     margin-bottom: 0.25rem;
+    margin-left: 1rem;
 }
 
 .action-card p {
     font-size: 0.875rem;
     color: #6b7280;
+    margin-bottom: 0;
+    margin-left: 1rem;
 }
 
-/* Responsive Design */
+/* Arrow Icon */
+.action-card .fa-arrow-right {
+    color: #667eea;
+    font-size: 1rem;
+    transition: transform 0.3s ease;
+}
+
+.action-card:hover .fa-arrow-right {
+    transform: translateX(5px);
+    color: #764ba2;
+}
+
+/* Responsive Design for Quick Actions */
 @media (max-width: 768px) {
-    .content-header {
+    .quick-actions-section {
         padding: 1.5rem;
     }
 
-    .stats-container {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1rem;
+    .action-card {
+        padding: 1rem;
+        margin-bottom: 1rem;
     }
 
-    .action-card {
-        margin-bottom: 1rem;
+    .action-icon {
+        width: 45px;
+        height: 45px;
+        font-size: 1.1rem;
+    }
+
+    .action-card h5 {
+        font-size: 1rem;
+        margin-left: 0.75rem;
+    }
+
+    .action-card p {
+        font-size: 0.8rem;
+        margin-left: 0.75rem;
     }
 }
 
 @media (max-width: 576px) {
-    .stats-container {
-        grid-template-columns: 1fr;
+    .quick-actions-section {
+        padding: 1rem;
     }
 
-    .page-title {
-        font-size: 1.5rem;
+    .quick-actions-section h3 {
+        font-size: 1.25rem;
+        margin-bottom: 1rem;
+    }
+
+    .action-card {
+        padding: 0.75rem;
+    }
+
+    .action-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
     }
 }
 </style>

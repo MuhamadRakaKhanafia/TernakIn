@@ -5,6 +5,7 @@ namespace App\Services;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Http\Client\Response;
 use Exception;
 
 class GeminiFreeService
@@ -170,6 +171,7 @@ Sekarang bantu peternak dengan pertanyaan berikut:";
             ]
         ];
 
+        /** @var Response $response */
         $response = Http::timeout(30)
             ->retry(2, 1000)
             ->withHeaders([
@@ -179,11 +181,12 @@ Sekarang bantu peternak dengan pertanyaan berikut:";
             ->post($url, $payload);
 
         if ($response->successful()) {
+            /** @var array $data */
             $data = $response->json();
-            
+
             // Extract content dari berbagai format response
             $content = $this->extractContentFromResponse($data);
-            
+
             if ($content) {
                 return [
                     'success' => true,
@@ -196,9 +199,11 @@ Sekarang bantu peternak dengan pertanyaan berikut:";
                 ];
             }
         } else {
+            /** @var string $errorBody */
             $errorBody = $response->body();
+            /** @var array|null $errorData */
             $errorData = json_decode($errorBody, true);
-            
+
             return [
                 'success' => false,
                 'error' => $errorData['error']['message'] ?? 'API Error: ' . $response->status()
@@ -513,12 +518,14 @@ Sekarang bantu peternak dengan pertanyaan berikut:";
                 ]
             ];
 
+            /** @var Response $response */
             $response = Http::timeout(10)->post($testUrl, $payload);
-            
+
             if ($response->successful()) {
+                /** @var array $data */
                 $data = $response->json();
                 $content = $this->extractContentFromResponse($data);
-                
+
                 return [
                     'success' => true,
                     'message' => '✅ Gemini API CONNECTED',
@@ -528,6 +535,7 @@ Sekarang bantu peternak dengan pertanyaan berikut:";
                     'api_key_preview' => substr($this->apiKey, 0, 10) . '...'
                 ];
             } else {
+                /** @var array|null $error */
                 $error = $response->json();
                 return [
                     'success' => false,

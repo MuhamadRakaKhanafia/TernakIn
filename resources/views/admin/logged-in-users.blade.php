@@ -43,7 +43,8 @@
                 <thead class="table-dark">
                     <tr>
                         <th>User Profile</th>
-                        <th>Contact Info</th>
+                        <th>Telephone</th>
+                        <th>Email</th>
                         <th>Location</th>
                         <th>Account Details</th>
                         <th>Status</th>
@@ -75,14 +76,18 @@
                             </div>
                         </td>
                         <td>
+                            <div class="Telephone">
+                                <div class="contact-userphone">
+                                    <i class="fas fa-phone text-muted me-2"></i>
+                                    {{ $user->phone ?? 'N/A' }}
+                                </div>
+                            </div>
+                        </td>
+                        <td>
                             <div class="contact-info">
                                 <div class="contact-email">
                                     <i class="fas fa-envelope text-muted me-2"></i>
                                     {{ $user->email }}
-                                </div>
-                                <div class="contact-phone">
-                                    <i class="fas fa-phone text-muted me-2"></i>
-                                    {{ $user->phone ?? 'Not provided' }}
                                 </div>
                             </div>
                         </td>
@@ -92,9 +97,6 @@
                                     <i class="fas fa-map-marker-alt text-muted me-2"></i>
                                     {{ $user->location->province->name ?? 'Unknown Province' }}
                                 </div>
-                                <div class="location-city text-muted">
-                                    {{ $user->location->city->name ?? 'Unknown City' }}
-                                </div>
                             </div>
                         </td>
                         <td>
@@ -102,10 +104,6 @@
                                 <div class="registration-date">
                                     <i class="fas fa-calendar-plus text-muted me-2"></i>
                                     <span class="date-text">{{ $user->created_at->format('M j, Y') }}</span>
-                                </div>
-                                <div class="registration-time text-muted">
-                                    <i class="fas fa-clock text-muted me-2"></i>
-                                    {{ $user->created_at->format('H:i') }}
                                 </div>
                             </div>
                         </td>
@@ -115,11 +113,6 @@
                                     <i class="fas {{ $user->is_active ? 'fa-check-circle' : 'fa-times-circle' }} me-1"></i>
                                     {{ $user->is_active ? 'Active' : 'Inactive' }}
                                 </span>
-                                @if($user->email_verified_at)
-                                    <div class="verification-badge">
-                                        <i class="fas fa-shield-alt text-success" title="Email Verified"></i>
-                                    </div>
-                                @endif
                             </div>
                         </td>
                     </tr>
@@ -219,6 +212,8 @@
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
     overflow: hidden;
     border: 1px solid #e2e8f0;
+    margin: 0 auto;
+    max-width: 1200px;
 }
 
 .table {
@@ -237,7 +232,7 @@
 }
 
 .table tbody td {
-    padding: 1.5rem;
+    padding: 0.5rem 1.5rem;
     vertical-align: middle;
     border-bottom: 1px solid #f1f5f9;
 }

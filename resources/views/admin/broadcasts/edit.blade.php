@@ -1,4 +1,4 @@
-10@extends('layouts.app')
+@extends('layouts.app')
 
 @section('title', 'Edit Broadcast - Admin')
 

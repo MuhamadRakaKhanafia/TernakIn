@@ -21,7 +21,7 @@ class AdminController extends Controller
             'total_users' => User::count(),
             'total_forms' => Livestock::count(), // Assuming forms are livestock entries
             'total_diseases' => Disease::count(),
-            'total_chat_queries' => 0, // TODO: Implement chat query count
+            'total_chat_queries' => \App\Models\AiChatMessage::where('role', 'user')->count(),
             'active_users' => User::where('created_at', '>=', now()->subDays(30))->count(),
         ];
 
